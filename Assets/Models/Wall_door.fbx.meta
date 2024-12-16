@@ -1,19 +1,9 @@
 fileFormatVersion: 2
-guid: 40c39a91b4e965342a23b1405209f84c
+guid: 43e377b453455604792913f219f6f656
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Material
-    second: {fileID: 2100000, guid: 9ff020a8475286a42b2b72faf111a493, type: 2}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: Malborok
-    second: {fileID: 2800000, guid: c543f673995f40b4792dd8693a4c1388, type: 3}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
