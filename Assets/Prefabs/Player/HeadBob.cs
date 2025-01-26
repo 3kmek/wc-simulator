@@ -8,7 +8,11 @@ public class HeadBob : MonoBehaviour
     [Range(0.01f, 0.1f)] public float Amount = 0.002f;
     [Range(1f, 30f)] public float Frequency = 10.0f;
     [Range(10f, 100f)] public float Smooth = 10.0f;
-
+    
+    [Range(0.01f, 0.1f)] public float idleAmount = 0.002f;
+    [Range(1f, 30f)] public float idleFrequency = 10.0f;
+    [Range(10f, 100f)] public float idleSmooth = 10.0f;
+    
     private Vector3 startPos;
 
     private void Start()
@@ -30,6 +34,10 @@ public class HeadBob : MonoBehaviour
         {
             StartHeadBob();
         }
+        else if (inputMagnitude == 0f)
+        {
+            IdleHeadBob();
+        }
     }
 
     Vector3 StartHeadBob()
@@ -38,6 +46,17 @@ public class HeadBob : MonoBehaviour
         
         pos.y += Mathf.Lerp(pos.y, Mathf.Sin(Time.time * Frequency) * Amount * 1.4f, Smooth * Time.deltaTime);
         pos.x += Mathf.Lerp(pos.x, Mathf.Sin(Time.time * Frequency / 2f) * Amount * 1.6f, Smooth * Time.deltaTime);
+        transform.localPosition += pos;
+
+        return pos;
+    }
+    
+    Vector3 IdleHeadBob()
+    {
+        Vector3 pos = Vector3.zero;
+        
+        pos.y += Mathf.Lerp(pos.y, Mathf.Sin(Time.time * idleFrequency) * idleAmount * 1.4f, idleSmooth * Time.deltaTime);
+        pos.x += Mathf.Lerp(pos.x, Mathf.Sin(Time.time * idleFrequency / 2f) * idleAmount * 1.6f, idleSmooth * Time.deltaTime);
         transform.localPosition += pos;
 
         return pos;

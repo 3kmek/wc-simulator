@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using NPC;
 using UnityEngine;
 using TMPro;
 
@@ -158,8 +159,23 @@ public class PlayerMovementModern : MonoBehaviour
             {
                 if (interactPrompt != null)
                 {
-                    interactPrompt.enabled = true; // Mesajı göster
-                    interactPrompt.text = "Give The Key \n(Woman Section)\nPress [E]\n"; // İstediğiniz mesajı ayarlayın
+                     // Mesajı göster
+                    if (hit.transform.GetComponent<NPCController>())
+                    {
+                        NPCController npc = hit.transform.GetComponent<NPCController>();
+                        if (npc.currentState == NPCState.KeyGiver)
+                        {
+                            interactPrompt.enabled = true;
+                            interactPrompt.text = "Recieve The Key\nPress [E]\n";
+                            
+                        }
+                    }
+
+                    if (hit.transform.GetComponent<Key>())
+                    {
+                        interactPrompt.enabled = true;
+                        interactPrompt.text = "Give The Key \n" + hit.transform.GetComponent<Key>().genderOfKey + "\nPress [E]\n";
+                    }
                 }
             }
             else

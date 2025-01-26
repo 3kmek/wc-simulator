@@ -1,4 +1,7 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
@@ -12,11 +15,16 @@ namespace NPC
         WaitingForApproval,
         MovingToAction,
         PerformingAction,
-        PerformDone
+        PerformDone,
+        KeyGiver,
+        KeyThief,
+        AllDone
     }
 
-    public class NPCController : MonoBehaviour
+    
+    public class NPCController : MonoBehaviour, IInteractable
     {
+        public string Gender;
         public NPCState currentState;
         private NavMeshAgent agent;
 
@@ -32,7 +40,18 @@ namespace NPC
 
         // --- EKLENDİ: Belli aralıklarla tuvalet kontrolü yapmak için bir sayaç. ---
         [SerializeField]private float nextWCCheckTime = 0f;
-       
+
+        private List <string> genders = new List<string> { "Male", "Female", "Uni" };
+        public GameObject ToiletAssigned;
+
+        public Key HavingKey;
+
+
+        private void Awake()
+        {
+            int randomIntForGender = Random.Range(0, 2); // FOR NOW
+            Gender = genders[randomIntForGender];
+        }
 
         void Start()
         {
@@ -50,6 +69,8 @@ namespace NPC
                 // 5-10 saniye arasında rastgele bir süre sonra ilk kontrol
                 nextWCCheckTime = Time.time + Random.Range(5f, 10f);
             }
+            
+            
         }
 
         void Update()
@@ -96,7 +117,22 @@ namespace NPC
                     break;
 
                 case NPCState.PerformingAction:
-                    // Eylem tamamlanınca...
+                    StartCoroutine(DoStandartShit());
+                    currentState = NPCState.PerformDone;
+                    break;
+                case NPCState.PerformDone:
+                    agent.SetDestination(new Vector3(3, 0, 1));
+                    currentState = NPCState.KeyGiver;
+                    break;
+                
+                case NPCState.KeyGiver:
+                    
+                    
+                    break;
+                case NPCState.KeyThief:
+                    break;
+                case NPCState.AllDone:
+                    agent.SetDestination(new Vector3(10, 0, 20));
                     break;
 
                 // PerformDone durumunu da istersen ekleyebilirsin; senaryona göre handling yapabilirsin
@@ -109,7 +145,7 @@ namespace NPC
         /// </summary>
         void IsNPCGoingToWC()
         {
-            float chanceToQueue = Random.Range(0f, 20f);
+            float chanceToQueue = Random.Range(15f, 20f);
 
             // Burada eğer NPC halihazırda "Neutral" durumdaysa, girsin. 
             // chanceToQueue > 15f ise -> "Queuing" yap ve Register et.
@@ -149,7 +185,7 @@ namespace NPC
         /// </summary>
         public void OnTurn()
         {
-            Debug.Log($"{gameObject.name} tuvalet tipini belirtiyor: {toiletType}");
+            //Debug.Log($"{gameObject.name} tuvalet tipini belirtiyor: {toiletType}");
             currentState = NPCState.WaitingForApproval;
         }
 
@@ -160,6 +196,55 @@ namespace NPC
         {
             currentState = NPCState.MovingToAction;
             agent.SetDestination(actionPosition.position);
+        }
+
+        public void AssignNPCToToilet(GameObject selectedToilet, Key key)
+        {
+            ToiletAssigned = selectedToilet;
+            ToiletManager.Instance.RecalculateToilets(selectedToilet);
+            TakeKey(key);
+        }
+
+        public void TakeKey(Key key)
+        {
+            key.gameObject.SetActive(false);
+            StartCoroutine(MoveKeyToNPC(key));
+            //key.keyObject.DOMove(transform.position + new Vector3(0, 2f, 0), 1f);
+            
+        }
+
+        private IEnumerator MoveKeyToNPC(Key key)
+        {
+            float duration = 1.0f;
+            float elapsedTime = 0f;
+            HavingKey = key;
+            Vector3 startPos = key.keyObject.transform.position;
+
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                
+                key.keyObject.position = Vector3.Lerp(startPos, transform.position + new Vector3(0, 2f, 0), elapsedTime / duration);
+                key.keyObject.DORotate(Random.rotation.eulerAngles, 1f, RotateMode.FastBeyond360);
+                yield return null;
+            }
+            
+            key.keyObject.gameObject.SetActive(false);
+            transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = true;
+            
+        }
+
+        private IEnumerator DoStandartShit()
+        {
+            yield return new WaitForSeconds(1f);
+        }
+
+        public void GiveTheKeyToThePlayer()
+        {
+            
+            HavingKey.gameObject.SetActive(true);
+            currentState = NPCState.AllDone;
+            transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = false;
         }
 
         /// <summary>
@@ -182,6 +267,15 @@ namespace NPC
             {
                 queueManager.UnregisterNPC(this);
             }
+        }
+
+        public void Interact()
+        {
+            if (currentState == NPCState.KeyGiver)
+            {
+                GiveTheKeyToThePlayer();
+            }
+            
         }
     }
 }
