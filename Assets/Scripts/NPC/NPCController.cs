@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
@@ -25,6 +26,9 @@ namespace NPC
     public class NPCController : MonoBehaviour, IInteractable
     {
         public string Gender;
+        public int CreepinessLevel, Weight;
+        int chance;
+        
         public NPCState currentState;
         private NavMeshAgent agent;
 
@@ -45,32 +49,34 @@ namespace NPC
         public GameObject ToiletAssigned;
 
         public Key HavingKey;
+        
+        private NPCAnimatonController npcAnimatonController;
 
 
         private void Awake()
         {
             int randomIntForGender = Random.Range(0, 2); // FOR NOW
             Gender = genders[randomIntForGender];
+            CreepinessLevel = Random.Range(0, 101);
+            Weight = Random.Range(40, 201);
+            chance = Random.Range(0, 51);
         }
 
         void Start()
         {
             agent = GetComponent<NavMeshAgent>();
+            npcAnimatonController = GetComponent<NPCAnimatonController>();
+            player = GameObject.FindGameObjectWithTag("Player");
+            queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
             
-            // Burada NPC o an "Queuing" ile başlatılırsa (örneğin Inspector'dan), direkt kaydol
             if (queueManager != null && currentState == NPCState.Queuing)
             {
                 queueManager.RegisterNPC(this);
             }
-
-            // Eğer NPC, oyuna "Neutral" olarak başlıyorsa, ilk WC kontrol zamanını hesaplayalım.
             if (currentState == NPCState.Neutral)
             {
-                // 5-10 saniye arasında rastgele bir süre sonra ilk kontrol
                 nextWCCheckTime = Time.time + Random.Range(5f, 10f);
             }
-            
-            
         }
 
         void Update()
@@ -79,63 +85,91 @@ namespace NPC
             switch (currentState)
             {
                 case NPCState.Neutral:
-                    // Dışarda geziyor. Belli aralıklarla (5-10 sn) bir kere WC'ye gitmek isteyebilir.
-                    // Her frame kontrol etmek yerine, Time.time ile vakti gelince 1 kez kontrol ediyoruz:
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     if (Time.time >= nextWCCheckTime)
                     {
                         IsNPCGoingToWC();
-                        // Bir sonraki kontrolü tekrar 5-10 sn sonrasına planla.
                         nextWCCheckTime = Time.time + Random.Range(5f, 10f);
                     }
                     break;
 
                 case NPCState.Queuing:
-                    // NPC Kaydı -> Sırada durma / Sıradaki pozisyona gitme
+                    // Walking animasyonuna geç
+                    
+
                     if (!agent.pathPending && agent.remainingDistance > 0.5f)
                     {
                         agent.SetDestination(currentQueueTarget);
                     }
-
-                    // Kuyruğun başı isek (index = 0)
-                    if (queueManager.npcsInQueue.Count > 0 && queueManager.npcsInQueue[0] == this)
+                    if(agent.remainingDistance > 0.5f) npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+                    if (agent.remainingDistance < 0.5f)
                     {
+                        npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE); ///////////////////////
+                    }
+
+                    // Kuyruğun başı mı?
+                    if (queueManager.npcsInQueue != null && queueManager.npcsInQueue.Count > 0 && queueManager.npcsInQueue[0] == this && agent.remainingDistance < 0.5f)
+                    {
+                        npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
                         OnTurn();
                     }
                     break;
 
                 case NPCState.WaitingForApproval:
-                    // Oyuncudan onay bekleniyor
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
+                    transform.DORotate(player.transform.rotation.eulerAngles + new Vector3(0, 180f, 0), 1f, RotateMode.FastBeyond360);
                     break;
 
                 case NPCState.MovingToAction:
-                    // Belirlenen noktaya hareket
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+
                     if (!agent.pathPending && agent.remainingDistance < 0.5f)
                     {
                         currentState = NPCState.PerformingAction;
-                        // PerformAction();
                     }
                     break;
 
                 case NPCState.PerformingAction:
-                    StartCoroutine(DoStandartShit());
-                    currentState = NPCState.PerformDone;
-                    break;
-                case NPCState.PerformDone:
-                    agent.SetDestination(new Vector3(3, 0, 1));
-                    currentState = NPCState.KeyGiver;
-                    break;
-                
-                case NPCState.KeyGiver:
+                    transform.position = ToiletAssigned.transform.position;
+                    if (Gender == "Male") transform.DORotate(new Vector3(0, 90f, 0), 1f, RotateMode.FastBeyond360);
+                    if (Gender == "Female") transform.DORotate(new Vector3(0, 270f, 0), 1f, RotateMode.FastBeyond360);
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.SHITTING);
+
                     
-                    
-                    break;
-                case NPCState.KeyThief:
-                    break;
-                case NPCState.AllDone:
-                    agent.SetDestination(new Vector3(10, 0, 20));
+                    Debug.Log(chance);
+                    if (CreepinessLevel + chance > 120)
+                    {
+                        StartCoroutine(DoSteelShit());
+                    }
+                    else if (Weight + chance > 221)
+                    {
+                        StartCoroutine(DoBrokerShit());
+                    }
+                    else
+                    {
+                        StartCoroutine(DoStandartShit());
+                    }
                     break;
 
-                // PerformDone durumunu da istersen ekleyebilirsin; senaryona göre handling yapabilirsin
+                case NPCState.PerformDone:
+                    currentState = NPCState.KeyGiver;
+                    break;
+
+                case NPCState.KeyGiver:
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+                    agent.SetDestination(Gender == "Female" ? new Vector3(3, 0, 1) : new Vector3(-3, 0, 1));
+                    if (agent.remainingDistance < 0.5f) npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
+                    break;
+
+                case NPCState.KeyThief:
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.RUNNING);
+                    break;
+
+                case NPCState.AllDone:
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+
+                    agent.SetDestination(new Vector3(10, 0, 20));
+                    break;
             }
         }
 
@@ -151,10 +185,11 @@ namespace NPC
             // chanceToQueue > 15f ise -> "Queuing" yap ve Register et.
             if (chanceToQueue > 15f && currentState == NPCState.Neutral)
             {
-                currentState = NPCState.Queuing;
                 
-                if (queueManager != null)
+                
+                if (queueManager != null && queueManager.npcsInQueue.Count != 7)
                 {
+                    currentState = NPCState.Queuing;
                     queueManager.RegisterNPC(this);
                 }
             }
@@ -187,6 +222,7 @@ namespace NPC
         {
             //Debug.Log($"{gameObject.name} tuvalet tipini belirtiyor: {toiletType}");
             currentState = NPCState.WaitingForApproval;
+            
         }
 
         /// <summary>
@@ -236,7 +272,32 @@ namespace NPC
 
         private IEnumerator DoStandartShit()
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(6f);
+            Debug.Log("NPC Does standart shit");
+            
+            currentState = NPCState.PerformDone;
+            
+        }
+        
+        private IEnumerator DoBrokerShit()
+        {
+            yield return new WaitForSeconds(7f);
+            Debug.Log("NPC Broke the toilet");
+            
+            
+            currentState = NPCState.PerformDone;
+            
+            
+        }
+        
+        private IEnumerator DoSteelShit()
+        {
+            yield return new WaitForSeconds(7f);
+            Debug.Log("NPC Steels the toilet");
+            
+            
+            currentState = NPCState.PerformDone;
+            
         }
 
         public void GiveTheKeyToThePlayer()
