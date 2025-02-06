@@ -9,16 +9,34 @@ public class CameraRotator : MonoBehaviour
     private float rotationX, rotationY = 0f;
     [SerializeField] GameObject player;
     [SerializeField] private Transform orientation;
+    
+    public bool isCursorVisible = true;
 
     private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        
     }
 
     void Update()
     {
         HandleCameraRotation();
+
+        HandleCursor();
+    }
+
+    void HandleCursor()
+    {
+        if (isCursorVisible)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        
     }
 
     void HandleCameraRotation()

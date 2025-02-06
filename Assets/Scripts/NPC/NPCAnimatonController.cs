@@ -19,7 +19,7 @@ namespace NPC
     public class NPCAnimatonController : MonoBehaviour
     {
         [SerializeField] NPCAnimationState _currentAnimState = NPCAnimationState.IDLE; // Varsayılan animasyon
-        NPCAnimationState _previousAnimState = NPCAnimationState.NONE; // Bir önceki animasyon
+        
 
         [SerializeField]Animator animator;
 
@@ -56,31 +56,25 @@ namespace NPC
             {
                 case NPCAnimationState.IDLE:
                     animator.SetBool("isIdle", true);
-                    Debug.Log("Current State: IDLE");
                     break;
 
                 case NPCAnimationState.IDLERUSH:
                     animator.SetBool("isIdleRush", true); // IDLERUSH için aynı animasyon
-                    Debug.Log("Current State: IDLERUSH");
                     break;
 
                 case NPCAnimationState.WALKING:
                     animator.SetBool("isWalking", true);
-                    Debug.Log("Current State: WALKING");
                     break;
 
                 case NPCAnimationState.SHITTING:
                     animator.SetBool("isShitting", true);
-                    Debug.Log("Current State: SHITTING");
                     break;
 
                 case NPCAnimationState.SHITTINGALATURKA:
-                    Debug.Log("Current State: SHITTINGALATURKA (No Animation)");
                     break;
 
                 case NPCAnimationState.RUNNING:
                     animator.SetBool("isRunning", true);
-                    Debug.Log("Current State: RUNNING");
                     break;
 
                 default:

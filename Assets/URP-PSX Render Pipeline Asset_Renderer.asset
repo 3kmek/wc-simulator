@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8360612085949814674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7813741425bf9df4b8f6b5a4f6b1f66f, type: 3}
+  m_Name: CRTRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
 --- !u!114 &-5677514569700259782
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12,7 +25,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7813741425bf9df4b8f6b5a4f6b1f66f, type: 3}
   m_Name: Crt
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
+--- !u!114 &-3037803065896443797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d69a19d29ef66464ea0afc7cd84fd6c2, type: 3}
+  m_Name: VolumetricFogRendererFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  downsampleDepthShader: {fileID: 4800000, guid: cffeaeec0396a2c4dad475266cc8dfeb,
+    type: 3}
+  volumetricFogShader: {fileID: 4800000, guid: 08f816187f9af0244a95556ee0cab83f, type: 3}
 --- !u!114 &-1925210268287778290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25,7 +54,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a17da147615463497e4bd9e04f0dce1, type: 3}
   m_Name: Dithering
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47,7 +76,9 @@ MonoBehaviour:
   - {fileID: 6965443398785072023}
   - {fileID: -1925210268287778290}
   - {fileID: -5677514569700259782}
-  m_RendererFeatureMap: 3a48e961946a35b11be2f7ae9e0f60f1281ef3aad7fb0272
+  - {fileID: -8360612085949814674}
+  - {fileID: -3037803065896443797}
+  m_RendererFeatureMap: 3a48e961946a35b11be2f7ae9e0f60f1281ef3aad7fb02726ea81fb09a23f98b9a3cf91063046efb6b60a6df348ed7d5
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -103,7 +134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3277e3c6431244fb960cbd72870858e2, type: 3}
   m_Name: Fog
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
 --- !u!114 &6965443398785072023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,4 +147,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df6534dd185a4f18b50629b58de296b6, type: 3}
   m_Name: Pixelation
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1

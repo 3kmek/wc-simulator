@@ -766,11 +766,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78767d2ecc1d4534aa1cdb410cdcea50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _currentAnimState: 0
-  animator: {fileID: 0}
+  npcType: {fileID: 0}
   Gender: 
+  npcName: 
   CreepinessLevel: 0
   Weight: 0
+  Chance: 0
+  moneyToGive: 10
   currentState: 0
   queueManager: {fileID: 0}
   actionPosition: {fileID: 0}
@@ -779,6 +781,8 @@ MonoBehaviour:
   nextWCCheckTime: 0
   ToiletAssigned: {fileID: 0}
   HavingKey: {fileID: 0}
+  selectedToilet: {fileID: 0}
+  currencySystem: {fileID: 11400000, guid: ff6d683cf3b6e584d8cbf59410ba2b2a, type: 2}
 --- !u!114 &5493570546735920891
 MonoBehaviour:
   m_ObjectHideFlags: 0

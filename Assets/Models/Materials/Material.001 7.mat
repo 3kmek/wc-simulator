@@ -109,7 +109,7 @@ Material:
     - DeformMagnitude: 0
     - Vector1_21C41D02: 256
     - Vector1_6F288C5B: 0.5
-    - Vector1_B2CC132F: 60
+    - Vector1_B2CC132F: 90
     - Vector1_B9994903: 11
     - Vector1_E8746023: 16
     - _AlphaClip: 0
@@ -147,7 +147,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - Color_2E5415DE: {r: 1, g: 1, b: 1, a: 0}
-    - Vector2_8044833E: {r: 10, g: 10, b: 0, a: 0}
+    - Vector2_8044833E: {r: 8, g: 10, b: 0, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}

@@ -8,7 +8,6 @@ public class PlayerMovementModern : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed;
-
     public float groundDrag;
 
     public float jumpForce;
@@ -36,17 +35,31 @@ public class PlayerMovementModern : MonoBehaviour
 
     Rigidbody rb;
 
-    
-    
+    [Header("Interaction")]
     [SerializeField] float interactRange = 3f;
     [SerializeField] private LayerMask interactableLayer;
     [SerializeField] private TextMeshProUGUI interactPrompt;
-    [SerializeField] Camera playerCamera;
-    
+    [SerializeField] private Camera playerCamera;
+
+    // ================== STEP CLIMB ALANLARI =====================
+    [Header("Step Climb Settings")]
+    [Tooltip("Karakterin tırmanabileceği maksimum basamak yüksekliği.")]
+    [SerializeField] private float stepHeight = 0.3f;
+
+    [Tooltip("Yukarı doğru ne kadar hızlı tırmanacağını kontrol eder.")]
+    [SerializeField] private float stepSmooth = 2f;
+
+    [Tooltip("Karakterin önüne ne kadar mesafede basamak arayacağını belirtir.")]
+    [SerializeField] private float checkFrontDistance = 0.5f;
+    // ============================================================
+
     private void Start()
     {
-        playerCamera = Camera.main;
-        
+        if (playerCamera == null)
+        {
+            playerCamera = Camera.main;
+        }
+
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
 
@@ -56,7 +69,8 @@ public class PlayerMovementModern : MonoBehaviour
     private void Update()
     {
         // ground check
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        grounded = Physics.Raycast(transform.position, Vector3.down,
+            playerHeight * 0.5f + 0.2f, whatIsGround);
 
         MyInput();
         SpeedControl();
@@ -66,22 +80,19 @@ public class PlayerMovementModern : MonoBehaviour
             rb.drag = groundDrag;
         else
             rb.drag = 0;
-        
+
         CheckForInteractable();
-        
-        
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             InteractWithObject();
         }
-        
-        
-        
     }
 
     private void FixedUpdate()
     {
         MovePlayer();
+        StepClimb(); // Basamak tırmanma fonksiyonunu çağırıyoruz
     }
 
     private void MyInput()
@@ -90,12 +101,10 @@ public class PlayerMovementModern : MonoBehaviour
         verticalInput = Input.GetAxisRaw("Vertical");
 
         // when to jump
-        if(Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
-
             Jump();
-
             Invoke(nameof(ResetJump), jumpCooldown);
         }
     }
@@ -106,12 +115,15 @@ public class PlayerMovementModern : MonoBehaviour
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         // on ground
-        if(grounded)
+        if (grounded)
+        {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-
+        }
         // in air
-        else if(!grounded)
+        else
+        {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+        }
     }
 
     private void SpeedControl()
@@ -119,7 +131,7 @@ public class PlayerMovementModern : MonoBehaviour
         Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         // limit velocity if needed
-        if(flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > moveSpeed)
         {
             Vector3 limitedVel = flatVel.normalized * moveSpeed;
             rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
@@ -130,18 +142,39 @@ public class PlayerMovementModern : MonoBehaviour
     {
         // reset y velocity
         rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
-
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
     }
+
     private void ResetJump()
     {
         readyToJump = true;
     }
-    
-    
-    
-    
-    void CheckForInteractable()
+
+    // =================== BASAMAK TIRMANMA MANTIGI ===================
+    private void StepClimb()
+    {
+        // Alt (dize yakın) bir noktadan ileriye doğru ray atıyoruz
+        Vector3 lowerRayOrigin = transform.position + (Vector3.up * 0.1f);
+
+        // Eğer kısa mesafede bir basamağa/duvara çarparsak
+        if (Physics.Raycast(lowerRayOrigin, transform.forward, out RaycastHit hitLower, checkFrontDistance))
+        {
+            // Çarptığımız obje "whatIsGround" katmanındaysa
+            if (((1 << hitLower.collider.gameObject.layer) & whatIsGround.value) != 0)
+            {
+                // Bir de daha üst bir noktadan (basamak yüksekliği kadar) ray atıyoruz
+                Vector3 upperRayOrigin = transform.position + Vector3.up * stepHeight;
+                if (!Physics.Raycast(upperRayOrigin, transform.forward, out RaycastHit hitUpper, checkFrontDistance))
+                {
+                    // Üst kısım boşsa, yani basamak çok yüksek değilse -> yavaşça yukarı it
+                    rb.position += new Vector3(0f, stepSmooth * Time.deltaTime, 0f);
+                }
+            }
+        }
+    }
+    // ================================================================
+
+    private void CheckForInteractable()
     {
         if (playerCamera == null)
         {
@@ -150,31 +183,29 @@ public class PlayerMovementModern : MonoBehaviour
         }
 
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, interactRange, interactableLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer))
         {
             IInteractable interactable = hit.transform.GetComponent<IInteractable>();
             if (interactable != null)
             {
                 if (interactPrompt != null)
                 {
-                     // Mesajı göster
+                    // NPC Key Giver
                     if (hit.transform.GetComponent<NPCController>())
                     {
                         NPCController npc = hit.transform.GetComponent<NPCController>();
-                        if (npc.currentState == NPCState.KeyGiver)
+                        if (npc.currentState == NPCState.KeyGiver && npc.agent.remainingDistance < 0.5f)
                         {
                             interactPrompt.enabled = true;
                             interactPrompt.text = "Recieve The Key\nPress [E]\n";
-                            
                         }
                     }
-
+                    // Key
                     if (hit.transform.GetComponent<Key>())
                     {
                         interactPrompt.enabled = true;
-                        interactPrompt.text = "Give The Key \n" + hit.transform.GetComponent<Key>().genderOfKey + "\nPress [E]\n";
+                        interactPrompt.text = "Give The Key \n" 
+                            + hit.transform.GetComponent<Key>().genderOfKey + "\nPress [E]\n";
                     }
                 }
             }
@@ -182,7 +213,7 @@ public class PlayerMovementModern : MonoBehaviour
             {
                 if (interactPrompt != null)
                 {
-                    interactPrompt.enabled = false; // Mesajı gizle
+                    interactPrompt.enabled = false;
                 }
             }
         }
@@ -190,20 +221,18 @@ public class PlayerMovementModern : MonoBehaviour
         {
             if (interactPrompt != null)
             {
-                interactPrompt.enabled = false; // Mesajı gizle
+                interactPrompt.enabled = false;
             }
         }
 
-        // Raycast çizgisi görünür olması için
+        // Raycast çizgisi debug
         Debug.DrawRay(ray.origin, ray.direction * interactRange, Color.green, 0.1f);
     }
 
-    void InteractWithObject()
+    private void InteractWithObject()
     {
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, interactRange, interactableLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer))
         {
             IInteractable interactable = hit.transform.GetComponent<IInteractable>();
             if (interactable != null)
@@ -220,8 +249,7 @@ public class PlayerMovementModern : MonoBehaviour
             Debug.Log("Hiçbir nesneye çarpmadı.");
         }
 
-        // Raycast çizgisi görünür olması için
+        // Raycast çizgisi debug
         Debug.DrawRay(ray.origin, ray.direction * interactRange, Color.green, 2f);
-        
     }
 }

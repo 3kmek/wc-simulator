@@ -2,9 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using ScriptibleObjects;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
+using WC;
 using Random = UnityEngine.Random;
 
 namespace NPC
@@ -25,15 +27,20 @@ namespace NPC
     
     public class NPCController : MonoBehaviour, IInteractable
     {
-        public string Gender;
-        public int CreepinessLevel, Weight;
-        int chance;
+        [Header("NPC Type")]
+        public NPCTypeScriptableObject npcType;
+        
+        [Header("NPC Specs")]
+        public string Gender, npcName;
+        public int CreepinessLevel, Weight, Chance;
+        public int moneyToGive = 10;
         
         public NPCState currentState;
-        private NavMeshAgent agent;
+        public NavMeshAgent agent;
 
         // Queue system
         [HideInInspector] public QueueManager queueManager;
+        private ToiletManager ToiletManager;
         private Vector3 currentQueueTarget; // Sırada duracağı konum
         private int currentQueueIndex = -1; // Kendi sıralama index’im
 
@@ -41,33 +48,48 @@ namespace NPC
         [SerializeField] private GameObject player;        // Örnek
 
         public string toiletType;
+        private bool isShitting = false;
 
         // --- EKLENDİ: Belli aralıklarla tuvalet kontrolü yapmak için bir sayaç. ---
         [SerializeField]private float nextWCCheckTime = 0f;
 
-        private List <string> genders = new List<string> { "Male", "Female", "Uni" };
+        
+        
         public GameObject ToiletAssigned;
 
         public Key HavingKey;
         
         private NPCAnimatonController npcAnimatonController;
 
-
-        private void Awake()
-        {
-            int randomIntForGender = Random.Range(0, 2); // FOR NOW
-            Gender = genders[randomIntForGender];
-            CreepinessLevel = Random.Range(0, 101);
-            Weight = Random.Range(40, 201);
-            chance = Random.Range(0, 51);
-        }
-
+        public GameObject selectedToilet;
+        
+        public CurrencySystem currencySystem;
+       
         void Start()
         {
+            if (npcType != null)
+            {
+                // ScriptableObject'ten referans değerleri al ama her NPC için override et
+                npcName = npcType.npcName;
+                Gender = Random.Range(0, 2) == 0 ? "Male" : "Female";
+                Weight = Random.Range(40, 151);
+                CreepinessLevel = Random.Range(0, 101);
+                Chance = Random.Range(0, 51);
+                moneyToGive = Random.Range(10, 15);
+
+                Debug.Log($"Spawned NPC: {npcName} | Gender: {Gender} | Weight: {Weight} | Creepiness: {CreepinessLevel} | Chance: {Chance}");
+            }
+            else
+            {
+                Debug.LogError("NPCTypeScriptableObject is NULL!");
+            }
+            
             agent = GetComponent<NavMeshAgent>();
             npcAnimatonController = GetComponent<NPCAnimatonController>();
             player = GameObject.FindGameObjectWithTag("Player");
             queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
+            ToiletManager = ToiletManager.Instance;
+            //ToiletManager = GameObject.FindGameObjectWithTag("Toilet Manager").GetComponent<ToiletManager>();
             
             if (queueManager != null && currentState == NPCState.Queuing)
             {
@@ -86,11 +108,12 @@ namespace NPC
             {
                 case NPCState.Neutral:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
-                    if (Time.time >= nextWCCheckTime)
-                    {
-                        IsNPCGoingToWC();
-                        nextWCCheckTime = Time.time + Random.Range(5f, 10f);
-                    }
+                    IsNPCGoingToWC();
+                    //if (Time.time >= nextWCCheckTime)
+                    //{
+                   //     IsNPCGoingToWC();
+                    //    nextWCCheckTime = Time.time + Random.Range(5f, 10f);
+                    //}
                     break;
 
                 case NPCState.Queuing:
@@ -117,7 +140,7 @@ namespace NPC
 
                 case NPCState.WaitingForApproval:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
-                    transform.DORotate(player.transform.rotation.eulerAngles + new Vector3(0, 180f, 0), 1f, RotateMode.FastBeyond360);
+                    // transform.DOLookAt(player.transform.rotation.eulerAngles + new Vector3(0, 180f, 0), 1f);
                     break;
 
                 case NPCState.MovingToAction:
@@ -134,24 +157,28 @@ namespace NPC
                     if (Gender == "Male") transform.DORotate(new Vector3(0, 90f, 0), 1f, RotateMode.FastBeyond360);
                     if (Gender == "Female") transform.DORotate(new Vector3(0, 270f, 0), 1f, RotateMode.FastBeyond360);
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.SHITTING);
-
                     
-                    Debug.Log(chance);
-                    if (CreepinessLevel + chance > 120)
+                    if (!isShitting) // Eğer zaten tuvaletini yapıyorsa tekrar başlatma
                     {
-                        StartCoroutine(DoSteelShit());
-                    }
-                    else if (Weight + chance > 221)
-                    {
-                        StartCoroutine(DoBrokerShit());
-                    }
-                    else
-                    {
-                        StartCoroutine(DoStandartShit());
+                        isShitting = true; // Tekrar çağrılmasını engelle
+
+                        if (CreepinessLevel + Chance > 120)
+                        {
+                            StartCoroutine(DoSteelShit());
+                        }
+                        else if (Weight + Chance > 221)
+                        {
+                            StartCoroutine(DoBrokerShit());
+                        }
+                        else
+                        {
+                            StartCoroutine(DoStandartShit());
+                        }
                     }
                     break;
 
                 case NPCState.PerformDone:
+                    isShitting = false;
                     currentState = NPCState.KeyGiver;
                     break;
 
@@ -237,8 +264,18 @@ namespace NPC
         public void AssignNPCToToilet(GameObject selectedToilet, Key key)
         {
             ToiletAssigned = selectedToilet;
-            ToiletManager.Instance.RecalculateToilets(selectedToilet);
+            ToiletManager.Instance.MakeToiletBusy(selectedToilet);
             TakeKey(key);
+        }
+        
+        public void GiveTheKeyToThePlayer()
+        {
+            
+            HavingKey.gameObject.SetActive(true);
+            currentState = NPCState.AllDone;
+            transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = false;
+            ToiletManager.MakeToiletAvaible(selectedToilet);
+            currencySystem.AddMoney(moneyToGive);
         }
 
         public void TakeKey(Key key)
@@ -274,14 +311,17 @@ namespace NPC
         {
             yield return new WaitForSeconds(6f);
             Debug.Log("NPC Does standart shit");
+            ToiletAssigned.GetComponent<Toilet>().DoneShit(ToiletAssigned);
             
             currentState = NPCState.PerformDone;
-            
+            yield return null;
+
         }
         
         private IEnumerator DoBrokerShit()
         {
             yield return new WaitForSeconds(7f);
+            
             Debug.Log("NPC Broke the toilet");
             
             
@@ -300,13 +340,7 @@ namespace NPC
             
         }
 
-        public void GiveTheKeyToThePlayer()
-        {
-            
-            HavingKey.gameObject.SetActive(true);
-            currentState = NPCState.AllDone;
-            transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = false;
-        }
+        
 
         /// <summary>
         /// Gerçek tuvalet kullanma animasyonu / bekleme vs.
@@ -328,6 +362,16 @@ namespace NPC
             {
                 queueManager.UnregisterNPC(this);
             }
+        }
+
+        public string GetInteractionText()
+        {
+            if (currentState == NPCState.KeyGiver)
+            {
+                return "Receive the key\nPress [E]";
+            }
+
+            return null;
         }
 
         public void Interact()

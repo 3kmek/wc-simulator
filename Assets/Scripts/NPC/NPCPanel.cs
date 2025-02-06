@@ -11,29 +11,30 @@ namespace NPC
         [SerializeField] private QueueManager queueManager;
         [SerializeField] private TextMeshProUGUI text;
 
+        private const string EmptyText = "-blank\n-blank\n-blank\n-blank";
+
         private void Start()
         {
-            queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
+            queueManager = GameObject.FindGameObjectWithTag("Queue Manager")?.GetComponent<QueueManager>();
             text = GetComponent<TextMeshProUGUI>();
         }
 
         private void Update()
         {
-            if (queueManager != null && queueManager.npcsInQueue != null && queueManager.npcsInQueue.Count > 0 && queueManager.npcsInQueue[0] != null)
-            {
-                NPCController frontNpc = queueManager.npcsInQueue[0];
-                string gender = frontNpc.Gender;
-                int npcCreepinessLevel = frontNpc.CreepinessLevel;
-                int npcWeight = frontNpc.Weight;
-                text.text = "Gender - " + gender + "\nCreepiness Level - " + npcCreepinessLevel + "\nWeight - " + npcWeight + " (kg)" + "\n-blank";
-            }
-            else
-            {
-                text.text = "-blank\n-blank\n-blank\n-blank";
-            }
-            
-            
+            text.text = TryGetFrontNPC(out NPCController frontNpc) && frontNpc.agent.remainingDistance < 0.5f
+                ? GetNPCInfo(frontNpc)
+                : EmptyText;
+        }
+
+        private bool TryGetFrontNPC(out NPCController frontNpc)
+        {
+            frontNpc = null;
+            return queueManager != null && queueManager.npcsInQueue.Count > 0 && (frontNpc = queueManager.npcsInQueue[0]) != null;
+        }
+
+        private string GetNPCInfo(NPCController npc)
+        {
+            return $"NPC: {npc.npcType.npcName}\nGender: {npc.Gender}\nCreepiness: {npc.CreepinessLevel}\nWeight: {npc.Weight}kg";
         }
     }
 }
-
