@@ -103,7 +103,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 45edfac5ceb8b6b4482f1408cf7457ee,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5512047074307687374}
+      addedObject: {fileID: 545157738446760877}
   m_SourcePrefab: {fileID: 100100000, guid: 45edfac5ceb8b6b4482f1408cf7457ee, type: 3}
 --- !u!1 &5758349597282752559 stripped
 GameObject:
@@ -125,8 +125,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   wcType: {fileID: 11400000, guid: 1477f1a61c2c8eb4eba60e5561744bea, type: 2}
   PoopTypes: []
-  triggeredPoop: 0
-  isToiletBusy: 0
+  _poopAmount: 0
+  isToiletFullOfShit: 0
+  isNPCAssigned: 0
+  _colliders: []
+  colliderBoxSize: {x: 3, y: 2, z: 3}
 --- !u!64 &8017232115183651745
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -149,24 +152,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -8803937527578110353, guid: 45edfac5ceb8b6b4482f1408cf7457ee, type: 3}
---- !u!65 &5512047074307687374
-BoxCollider:
+--- !u!208 &545157738446760877
+NavMeshObstacle:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5758349597282752559}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.9864154, y: 1.5414987, z: 1.9920129}
-  m_Center: {x: 0.060914755, y: 0.77050674, z: -0.08711323}
+  m_Shape: 1
+  m_Extents: {x: 0.63900006, y: 0.46100003, z: 0.60800004}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0.007, y: 0.46, z: 0.003}
+  m_TimeToStationary: 0.5

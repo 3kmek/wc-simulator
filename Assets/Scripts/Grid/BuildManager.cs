@@ -1,12 +1,15 @@
 using System;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class BuildManager : MonoBehaviour
 {
     public static BuildManager Instance;
 
     public bool isBuildingMode = false;
+    
+    //[SerializeField] private UIBuildSystem _uiBuildSystem;
 
     // Inspector’dan ayarlayacağınız Real/Ghost eşleşmeleri
     [Header("Buildable Items (Real + Ghost)")]
@@ -26,6 +29,7 @@ public class BuildManager : MonoBehaviour
         {
             if (InventorySystem.Instance.Slot.GetComponent<Hammer>() != null)
             {
+                
                 HandlePlacingObject();
                 HandleKeyboardInput();
                 HandleMouseScroll();
@@ -39,7 +43,7 @@ public class BuildManager : MonoBehaviour
         // Sol tık -> Yerleştirmeyi dene
         if (Input.GetMouseButtonDown(0))
         {
-            if (GridSystem.Instance.CanPlaceObject())
+            if (GridSystem.Instance.CanPlaceObject() && !UIBuildSystem.Instance.isBuildingMenuOn)
             {
                 GridSystem.Instance.PlaceObject();
             }

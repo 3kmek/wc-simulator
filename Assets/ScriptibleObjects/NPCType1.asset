@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: NPCType1
   m_EditorClassIdentifier: 
   npcName: Samet
-  Gender: Male
+  gender: 0
   Weight: 89
   CreepinessLevel: 42
   Chance: 34
-  npcPrefab: {fileID: 1045973838363285315, guid: 5f4d055732fb3d646ae5381dadbb4a66,
+  npcPrefab: {fileID: 7616687909786123779, guid: 5b515dabe742a1c49b28e696620c2434,
     type: 3}
   isAggressive: 0
   patienceLevel: 0

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ScriptibleObjects;
@@ -6,6 +7,7 @@ using WC;
 public class ToiletManager : MonoBehaviour
 {
     private static ToiletManager _instance;
+
     public static ToiletManager Instance
     {
         get
@@ -18,6 +20,7 @@ public class ToiletManager : MonoBehaviour
                     Debug.LogError("ToiletManager bulunamadı! Sahneye eklenmiş mi?");
                 }
             }
+
             return _instance;
         }
     }
@@ -31,21 +34,12 @@ public class ToiletManager : MonoBehaviour
     {
         RecalculateToilets();
     }
-    
-    private bool AllTheToiletsAreBusy()
-    {
-        if (womenToilets.Count == 0 || menToilets.Count == 0)
-        {
-            return true;
-        }
-        
-        if (womenToilets.Count == 0 || menToilets.Count == 0)
-        {
-            return false;
-        }
 
-        return false;
+    private void Update()
+    {
+        RecalculateToilets();
     }
+
 
     public void RecalculateToilets()
     {
@@ -59,120 +53,28 @@ public class ToiletManager : MonoBehaviour
             Toilet toiletSc = toilet.GetComponent<Toilet>();
             currentToilets.Add(toilet);
 
-            if (toiletSc.wcType.wcGender == "Female")
-                womenToilets.Add(toilet);
-
-            if (toiletSc.wcType.wcGender == "Male")
-                menToilets.Add(toilet);
-        }
-    }
-
-    public void RecalculateToilets(GameObject selectedToilet)
-    {
-        if (!busyToilets.Contains(selectedToilet) )
-        {
-            busyToilets.Add(selectedToilet);
-        }
-        
-        else
-        {
-            if (busyToilets.Contains(selectedToilet))
-            {
-                busyToilets.Remove(selectedToilet);
-            }
-            else
-            {
-                Debug.LogError("HATA: " + selectedToilet.name + " busyToilets içinde bulunamadı!");
-            }
-        }
-
-        currentToilets.Clear();
-        womenToilets.Clear();
-        menToilets.Clear();
-
-        GameObject[] foundToilets = GameObject.FindGameObjectsWithTag("Toilet");
-        foreach (GameObject toilet in foundToilets)
-        {
             if (!busyToilets.Contains(toilet))
             {
-                currentToilets.Add(toilet);
-                Toilet toiletSc = toilet.GetComponent<Toilet>();
-
-                if (toiletSc.wcType.wcGender == "Female")
-                    womenToilets.Add(toilet);
-
-                if (toiletSc.wcType.wcGender == "Male")
-                    menToilets.Add(toilet);
-            }
-        }
-    }
-
-    public void MakeToiletBusy(GameObject selectedToilet)
-    {
-
-        if (selectedToilet.GetComponent<Toilet>().isToiletBusy == false)
-        {
-            if (!busyToilets.Contains(selectedToilet) )
-            {
-                busyToilets.Add(selectedToilet);
+                busyToilets.Add(toilet);
             }
 
-            currentToilets.Clear();
-            womenToilets.Clear();
-            menToilets.Clear();
-
-            GameObject[] foundToilets = GameObject.FindGameObjectsWithTag("Toilet");
-            foreach (GameObject toilet in foundToilets)
+            if (!toiletSc.IsWCCompletelyFul())
             {
-                if (!busyToilets.Contains(toilet))
+                busyToilets.Remove(toilet);
+                switch (toiletSc.wcGender)
                 {
-                    currentToilets.Add(toilet);
-                    Toilet toiletSc = toilet.GetComponent<Toilet>();
-
-                    if (toiletSc.wcType.wcGender == "Female")
+                    case WCGender.Female:
                         womenToilets.Add(toilet);
-
-                    if (toiletSc.wcType.wcGender == "Male")
+                        break;
+                    case WCGender.Male:
                         menToilets.Add(toilet);
+                        break;
+                    case WCGender.None:
+                        currentToilets.Add(toilet);
+                        break;
                 }
             }
-            selectedToilet.GetComponent<Toilet>().isToiletBusy = true;
         }
-        
     }
 
-    public void MakeToiletAvaible(GameObject selectedToilet)
-    {
-        if (selectedToilet.GetComponent<Toilet>().isToiletBusy == true)
-        {
-            
-            if (busyToilets.Contains(selectedToilet) )
-            {
-                busyToilets.Remove(selectedToilet);
-            }
-
-            currentToilets.Clear();
-            womenToilets.Clear();
-            menToilets.Clear();
-
-            GameObject[] foundToilets = GameObject.FindGameObjectsWithTag("Toilet");
-            foreach (GameObject toilet in foundToilets)
-            {
-                if (!busyToilets.Contains(toilet))
-                {
-                    currentToilets.Add(toilet);
-                    Toilet toiletSc = toilet.GetComponent<Toilet>();
-
-                    if (toiletSc.wcType.wcGender == "Female")
-                        womenToilets.Add(toilet);
-
-                    if (toiletSc.wcType.wcGender == "Male")
-                        menToilets.Add(toilet);
-                }
-            }
-
-            selectedToilet.GetComponent<Toilet>().isToiletBusy = false;
-        }
-        
-    }
 }

@@ -30,6 +30,7 @@ public class GridSystem : MonoBehaviour
     [SerializeField] private Texture ghostObjectTexture;
 
     private GameObject ghostObject; // Şu an sahnede olan hayalet obje
+    
     private GameObject realPrefab;  // Yerleştirme anında Instantiate edeceğimiz gerçek obje
 
     // Yerleştirilmiş konumlar
@@ -53,9 +54,9 @@ public class GridSystem : MonoBehaviour
         UpdateGhostPositions();
 
         if (CanPlaceObject())
-            SetGhostColor(new Color(1f, 1f, 1f, 0.5f));
+            SetGhostColor(new Color(1f, 1f, 1f, 0.7f));
         else
-            SetGhostColor(Color.red);
+            SetGhostColor(new Color(1f, 0f, 0f, 0.8f));
     }
 
     /// <summary>
@@ -122,7 +123,9 @@ public class GridSystem : MonoBehaviour
     void UpdateGhostPositions()
     {
         if (ghostObject == null) return;
-
+        
+        
+        
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f))
         {
@@ -133,13 +136,20 @@ public class GridSystem : MonoBehaviour
                 Mathf.Round(point.z / gridSize) * gridSize
             );
 
-            ghostObject.transform.position = snappedPosition;
+            //ghostObject.transform.position = snappedPosition;
+            //Vector3.Lerp(ghostObject.transform.position, snappedPosition, 0.5f);
+            
+            ghostObject.transform.DOMove(snappedPosition, 0.05f).SetEase(Ease.InBounce).OnComplete(() =>
+            {
+                ghostObject.transform.position = snappedPosition;
+            }) ;
+            
 
             // Eğer bu grid pozisyonu doluysa ghost rengi kırmızı olsun
             if (occupiedPositions.Contains(snappedPosition))
-                SetGhostColor(Color.red);
+                SetGhostColor(new Color(1f, 0f, 0f, 0.3f));
             else
-                SetGhostColor(new Color(1f, 1f, 1f, 0.1f));
+                SetGhostColor(new Color(1f, 1f, 1f, 0.4f));
         }
 
         // Q/E ile ghost'u saat yönünde ters yönde döndürebiliriz
@@ -213,11 +223,14 @@ public class GridSystem : MonoBehaviour
             // Basit DOTween animasyonu (Scale 0'dan 1'e)
             placedObject.transform.localScale = Vector3.zero;
             placedObject.transform
-                        .DOScale(Vector3.one, 0.5f)
-                        .SetEase(Ease.OutBack);
+                        .DOScale(Vector3.one, 1f)
+                        .SetEase(Ease.OutBack).OnComplete(() =>
+                        {
+                            occupiedPositions.Add(placementPosition);
+                        });
 
             // Occupied listeye ekle
-            occupiedPositions.Add(placementPosition);
+            
         }
     }
 
@@ -226,7 +239,7 @@ public class GridSystem : MonoBehaviour
     /// </summary>
     public void RemoveObject()
     {
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit, 100f))

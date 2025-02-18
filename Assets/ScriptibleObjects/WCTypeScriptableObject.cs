@@ -4,24 +4,24 @@ using WC;
 
 namespace ScriptibleObjects
 {
+    
+
     [CreateAssetMenu(fileName = "WCType", menuName = "ScriptableObjects/WCTypeScriptableObject", order = 2)]
     public class WCTypeScriptableObject : ScriptableObject
     {
         [Header("WC Özellikleri")]
-        public string wcName;       // Tuvaletin adı (Luxury, Public, Porta Potty)
-        public int Level;           // Tuvaletin seviyesi (1-5 gibi)
-        public int Durability;      // Dayanıklılık (kaç kere kullanılabilir)
-        public int ShitLimit;       // Aynı anda kaç kişi kullanabilir
-        public string wcGender;
-        
-        
+        public string wcName;
+        public int Level;
+        public int Durability;
+        public int ShitLimit;
+    
         [Header("Özel Efektler")]
-        public bool hasAutoFlush;    // Otomatik sifon var mı?
-        public bool isLuxury;        // Lüks bir tuvalet mi?
-        public AudioClip flushSound; // Sifon sesi
+        public bool hasAutoFlush;
+        public bool isLuxury;
+        public AudioClip flushSound;
 
         [Header("Poop Types")] 
         public List<Poop> PoopTypes = new List<Poop>();
-        
     }
+
 }

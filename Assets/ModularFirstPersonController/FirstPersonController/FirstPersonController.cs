@@ -43,7 +43,7 @@ public class FirstPersonController : MonoBehaviour
 
     public bool enableZoom = true;
     public bool holdToZoom = false;
-    public KeyCode zoomKey = KeyCode.Mouse1;
+    public KeyCode zoomKey = KeyCode.F;
     public float zoomFOV = 30f;
     public float zoomStepTime = 5f;
 

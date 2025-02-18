@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8332443342560298710}
   - component: {fileID: 6640000515013337851}
   - component: {fileID: -3307268494874440262}
+  - component: {fileID: 6004500574037920295}
   m_Layer: 0
   m_Name: bWall1_1
   m_TagString: Untagged
@@ -118,3 +119,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6371bd945a4a8de43bf5b5adc36c7ff6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!208 &6004500574037920295
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7539647423859107587}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 2.5, y: 2.5, z: 0.062000003}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 2.5, z: 0}
+  m_TimeToStationary: 0.5

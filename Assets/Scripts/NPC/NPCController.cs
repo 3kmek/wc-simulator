@@ -140,13 +140,14 @@ namespace NPC
 
                 case NPCState.WaitingForApproval:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
+                    gameObject.layer = 6;
                     // transform.DOLookAt(player.transform.rotation.eulerAngles + new Vector3(0, 180f, 0), 1f);
                     break;
 
                 case NPCState.MovingToAction:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
-
-                    if (!agent.pathPending && agent.remainingDistance < 0.5f)
+                    gameObject.layer = 0;
+                    if (!agent.pathPending && agent.remainingDistance < 2f)
                     {
                         currentState = NPCState.PerformingAction;
                     }
@@ -186,6 +187,7 @@ namespace NPC
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     agent.SetDestination(Gender == "Female" ? new Vector3(3, 0, 1) : new Vector3(-3, 0, 1));
                     if (agent.remainingDistance < 0.5f) npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
+                    gameObject.layer = 6;
                     break;
 
                 case NPCState.KeyThief:
@@ -194,7 +196,7 @@ namespace NPC
 
                 case NPCState.AllDone:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
-
+                    gameObject.layer = 0;
                     agent.SetDestination(new Vector3(10, 0, 20));
                     break;
             }
@@ -264,7 +266,7 @@ namespace NPC
         public void AssignNPCToToilet(GameObject selectedToilet, Key key)
         {
             ToiletAssigned = selectedToilet;
-            ToiletManager.Instance.MakeToiletBusy(selectedToilet);
+            ToiletAssigned.GetComponent<Toilet>().isNPCAssigned = true;
             TakeKey(key);
         }
         
@@ -274,7 +276,7 @@ namespace NPC
             HavingKey.gameObject.SetActive(true);
             currentState = NPCState.AllDone;
             transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = false;
-            ToiletManager.MakeToiletAvaible(selectedToilet);
+            ToiletAssigned.GetComponent<Toilet>().isNPCAssigned = false;
             currencySystem.AddMoney(moneyToGive);
         }
 

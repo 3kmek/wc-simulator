@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ScriptibleObjects
 {
-    public enum GenderType { Male, Female, Uni }
+    public enum GenderType { Male, Female, None }
 
     [CreateAssetMenu(fileName = "NPCType", menuName = "ScriptableObjects/NPCTypeScriptableObject", order = 1)]
     public class NPCTypeScriptableObject : ScriptableObject

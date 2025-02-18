@@ -46,9 +46,9 @@ public class InventorySystem : MonoBehaviour
     // sunu emekle yazdim amk
     void HandleAnyHoldingItem()
     {
-        if (playerInteraction._currentHeldObject != null)
+        if (playerInteraction.isHoldingSomething)
         {
-            if (playerInteraction.isHoldingSomething)
+            if(playerInteraction._currentHeldObject != null)
             {
                 Slot = playerInteraction._currentHeldObject.gameObject;
                 holderHasSomething = true;
@@ -56,7 +56,10 @@ public class InventorySystem : MonoBehaviour
                 _holdable.Use();
             }
         }
-        if (!playerInteraction.isHoldingSomething && playerInteraction._currentHeldObject == null)
+        
+        
+        
+        if (!playerInteraction.isHoldingSomething)
         {
             Slot = null;
             holderHasSomething = false;

@@ -18,6 +18,7 @@ public class PlayerInteraction : MonoBehaviour
 
     public bool isHoldingSomething = false;
     public GameObject _currentHeldObject;
+    [FormerlySerializedAs("interactWhileHolding")] public bool IsInteractWhileHolding = false;
     
     
     private void Start()
@@ -48,11 +49,12 @@ public class PlayerInteraction : MonoBehaviour
 
         UpdateHighlight(hit, hitSomething);
         UpdateUI(hit);
+        UIBuildSystem.Instance.SetShowDemolishText();
     }
     
     private void UpdateHighlight(RaycastHit hit, bool hitSomething)
     {
-        if (_currentHeldObject != null) return;
+        //if (_currentHeldObject != null) return;
 
         // Layer reset mekanizması düzeltildi
         if (lastHighlightedObject != null && (!hitSomething || hit.transform.gameObject != lastHighlightedObject))
@@ -85,15 +87,25 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (newObject.layer == 8) return;
 
-        // Yeni objeyi işaretle
-        lastHighlightedObject = newObject;
-        originalLayer = newObject.layer;
-        newObject.layer = 8;
+        if (newObject.GetComponent<NPCController>() != null)
+        {
+            lastHighlightedObject = newObject.transform.GetChild(0).gameObject;
+            originalLayer = newObject.transform.GetChild(0).gameObject.layer;
+            newObject.transform.GetChild(0).gameObject.layer = 8;
+        }
+        else
+        {
+            // Yeni objeyi işaretle
+            lastHighlightedObject = newObject;
+            originalLayer = newObject.layer;
+            newObject.layer = 8;
+        }
+        
     }
     
     private void UpdateUI(RaycastHit hit)
     {
-        if (_currentHeldObject != null || !hit.transform)
+        if (!hit.transform)
         {
             interactPrompt.enabled = false;
             return;
@@ -110,6 +122,13 @@ public class PlayerInteraction : MonoBehaviour
         {
             TryInteract();
         }
+
+        if (Input.GetKeyDown(KeyCode.E) && _currentHeldObject != null)
+        {
+            TryInteractWhileHolding();
+        }
+        
+        
     }
     
     private void TryInteract()
@@ -125,8 +144,19 @@ public class PlayerInteraction : MonoBehaviour
             {
                 _currentHeldObject = hit.transform.gameObject;
                 holdable.OnPickup(_holdPosition);
+                IsInteractWhileHolding = true;
                 ResetObjectHighlight(); // EKLENDİ
             }
+        }
+    }private void TryInteractWhileHolding()
+    {
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer))
+        {
+            IInteractable interactable = hit.transform.GetComponent<IInteractable>();
+            interactable?.Interact();
+            ResetObjectHighlight();
+            
         }
     }
     

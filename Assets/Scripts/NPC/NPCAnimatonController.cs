@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NPC
 {
@@ -22,16 +24,16 @@ namespace NPC
         
 
         [SerializeField]Animator animator;
+        
+        [SerializeField] Transform _playerTransform;
+        [SerializeField] Transform _NPCHeadTransform;
 
-        // Animator parametrelerini cache yap
-        private int isIdleHash, isIdleRushHash;
-        private int isWalkingHash;
-        private int isRunningHash;
-        private int isShittingHash;
+        
 
         private void Start()
         {
             animator = gameObject.GetComponent<Animator>();
+            _playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
         }
 
         private void ResetAllAnimations()
@@ -56,10 +58,18 @@ namespace NPC
             {
                 case NPCAnimationState.IDLE:
                     animator.SetBool("isIdle", true);
+                    transform.DORotate(new Vector3(0,180f,0f), 1f).OnComplete(() =>
+                    {
+                        RotateHeadTowardsPlayer();
+                    });
                     break;
 
                 case NPCAnimationState.IDLERUSH:
                     animator.SetBool("isIdleRush", true); // IDLERUSH için aynı animasyon
+                    transform.DORotate(new Vector3(0,180f,0f), 1f).OnComplete(() =>
+                    {
+                        RotateHeadTowardsPlayer();
+                    });
                     break;
 
                 case NPCAnimationState.WALKING:
@@ -82,7 +92,11 @@ namespace NPC
                     break;
             }
         }
-        
+        private void RotateHeadTowardsPlayer()
+        {
+            
+        }
+
 
         // Animasyon durumunu dışarıdan değiştirmek için bir metod
         public void ChangeAnimationState(NPCAnimationState newState)

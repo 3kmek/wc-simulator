@@ -8,6 +8,9 @@ TagManager:
   - Toilet
   - Toilet Manager
   - BuildManager
+  - UIElement
+  - FemaleSection
+  - MaleSection
   layers:
   - Default
   - TransparentFX

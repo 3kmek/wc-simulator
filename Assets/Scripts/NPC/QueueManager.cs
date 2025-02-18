@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace NPC
 {
@@ -13,12 +14,14 @@ namespace NPC
         [Tooltip("Queue’de kullanılacak tüm pozisyonlar. Index sırasına göre NPC'ler dizeceğiz.")]
         public List<Transform> queuePositions = new List<Transform>();
 
+        private int _priority;
         private void Start()
         {
             for (int i = 0; i < transform.childCount; i++)
             {
                 queuePositions.Add(transform.GetChild(i));
             }
+            _priority = 0;
         }
         
         /// <summary>
@@ -32,6 +35,8 @@ namespace NPC
                 npcsInQueue.Add(npc);
                 npc.queueManager = this; // NPC, hangi QueueManager’a bağlı olduğunu bilsin
                 RecalculateQueuePositions();
+                _priority++;
+                npc.GetComponent<NavMeshAgent>().avoidancePriority = _priority;
             }
             else
             {
