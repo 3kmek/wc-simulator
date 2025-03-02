@@ -124,6 +124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wcType: {fileID: 11400000, guid: 1477f1a61c2c8eb4eba60e5561744bea, type: 2}
+  wcGender: 0
   PoopTypes: []
   _poopAmount: 0
   isToiletFullOfShit: 0
@@ -164,7 +165,7 @@ NavMeshObstacle:
   m_Shape: 1
   m_Extents: {x: 0.63900006, y: 0.46100003, z: 0.60800004}
   m_MoveThreshold: 0.1
-  m_Carve: 0
+  m_Carve: 1
   m_CarveOnlyStationary: 1
   m_Center: {x: 0.007, y: 0.46, z: 0.003}
   m_TimeToStationary: 0.5

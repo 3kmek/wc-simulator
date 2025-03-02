@@ -29,15 +29,43 @@ public class ToiletManager : MonoBehaviour
     public List<GameObject> womenToilets = new List<GameObject>();
     public List<GameObject> menToilets = new List<GameObject>();
     public List<GameObject> busyToilets = new List<GameObject>();
+    
+    PlayerInteraction playerInteraction;
 
     private void Start()
     {
         RecalculateToilets();
+        playerInteraction = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInteraction>();
     }
 
     private void Update()
     {
         RecalculateToilets();
+        HandleNoAvaibleToiletText();
+    }
+
+    public void HandleNoAvaibleToiletText()
+    {
+        if (menToilets.Count == 0 && womenToilets.Count == 0)
+        {
+            playerInteraction.noToiletAvaibleText.enabled = true;
+            playerInteraction.noToiletAvaibleText.text = "There is no toilet available.";
+        }
+        
+        else if (menToilets.Count == 0)
+        {
+            playerInteraction.noToiletAvaibleText.enabled = true;
+            playerInteraction.noToiletAvaibleText.text = "There is no men toilet available.";
+        }
+        else if (womenToilets.Count == 0)
+        {
+            playerInteraction.noToiletAvaibleText.enabled = true;
+            playerInteraction.noToiletAvaibleText.text = "There is no women toilet available.";
+        }
+        else
+        {
+            playerInteraction.noToiletAvaibleText.enabled = false;
+        }
     }
 
 

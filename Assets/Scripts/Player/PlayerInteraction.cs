@@ -18,12 +18,16 @@ public class PlayerInteraction : MonoBehaviour
 
     public bool isHoldingSomething = false;
     public GameObject _currentHeldObject;
-    [FormerlySerializedAs("interactWhileHolding")] public bool IsInteractWhileHolding = false;
+    public bool IsInteractWhileHolding = false;
+    
+    [Header("Texts")]
+    [SerializeField] public TextMeshProUGUI noToiletAvaibleText;
     
     
     private void Start()
     {
         playerCamera = Camera.main;
+        
     }
 
     private void Update()

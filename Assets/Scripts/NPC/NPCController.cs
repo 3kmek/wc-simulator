@@ -1,11 +1,8 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using DG.Tweening;
-using ScriptibleObjects;
-using TMPro;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using DG.Tweening;
+using ScriptibleObjects;
 using WC;
 using Random = UnityEngine.Random;
 
@@ -23,7 +20,6 @@ namespace NPC
         KeyThief,
         AllDone
     }
-
     
     public class NPCController : MonoBehaviour, IInteractable
     {
@@ -38,38 +34,33 @@ namespace NPC
         public NPCState currentState;
         public NavMeshAgent agent;
 
-        // Queue system
+        // WC Kuyruk Sistemi
         [HideInInspector] public QueueManager queueManager;
-        private ToiletManager ToiletManager;
-        private Vector3 currentQueueTarget; // Sırada duracağı konum
-        private int currentQueueIndex = -1; // Kendi sıralama index’im
+        private ToiletManager toiletManager;
+        private Vector3 currentQueueTarget;
+        private int currentQueueIndex = -1;
 
-        [SerializeField] public Transform actionPosition; // Örnek
-        [SerializeField] private GameObject player;        // Örnek
+        [SerializeField] public Transform actionPosition;
+        [SerializeField] private GameObject player;
 
         public string toiletType;
         private bool isShitting = false;
+        [SerializeField] private float nextWCCheckTime = 0f;
 
-        // --- EKLENDİ: Belli aralıklarla tuvalet kontrolü yapmak için bir sayaç. ---
-        [SerializeField]private float nextWCCheckTime = 0f;
-
-        
-        
         public GameObject ToiletAssigned;
-
         public Key HavingKey;
-        
         private NPCAnimatonController npcAnimatonController;
-
         public GameObject selectedToilet;
-        
         public CurrencySystem currencySystem;
-       
+
+        // Table (Key Giver) Sistemi
+        private Table table;
+        private bool isTableRegistered = false;
+        
         void Start()
         {
             if (npcType != null)
             {
-                // ScriptableObject'ten referans değerleri al ama her NPC için override et
                 npcName = npcType.npcName;
                 Gender = Random.Range(0, 2) == 0 ? "Male" : "Female";
                 Weight = Random.Range(40, 151);
@@ -88,9 +79,10 @@ namespace NPC
             npcAnimatonController = GetComponent<NPCAnimatonController>();
             player = GameObject.FindGameObjectWithTag("Player");
             queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
-            ToiletManager = ToiletManager.Instance;
-            //ToiletManager = GameObject.FindGameObjectWithTag("Toilet Manager").GetComponent<ToiletManager>();
+            toiletManager = ToiletManager.Instance;
+            table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
             
+            // Eğer NPC kuyruğa eklenme durumundaysa
             if (queueManager != null && currentState == NPCState.Queuing)
             {
                 queueManager.RegisterNPC(this);
@@ -103,35 +95,27 @@ namespace NPC
 
         void Update()
         {
-            
             switch (currentState)
             {
                 case NPCState.Neutral:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     IsNPCGoingToWC();
-                    //if (Time.time >= nextWCCheckTime)
-                    //{
-                   //     IsNPCGoingToWC();
-                    //    nextWCCheckTime = Time.time + Random.Range(5f, 10f);
-                    //}
                     break;
 
                 case NPCState.Queuing:
-                    // Walking animasyonuna geç
-                    
-
+                    // Kuyrukta hedefe gitmek için
                     if (!agent.pathPending && agent.remainingDistance > 0.5f)
-                    {
                         agent.SetDestination(currentQueueTarget);
-                    }
-                    if(agent.remainingDistance > 0.5f) npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
-                    if (agent.remainingDistance < 0.5f)
-                    {
-                        npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE); ///////////////////////
-                    }
+                    
+                    npcAnimatonController.ChangeAnimationState(agent.remainingDistance > 0.5f
+                        ? NPCAnimationState.WALKING
+                        : NPCAnimationState.IDLE);
 
-                    // Kuyruğun başı mı?
-                    if (queueManager.npcsInQueue != null && queueManager.npcsInQueue.Count > 0 && queueManager.npcsInQueue[0] == this && agent.remainingDistance < 0.5f)
+                    // Kuyruğun başındaysa
+                    if (queueManager.npcsInQueue != null &&
+                        queueManager.npcsInQueue.Count > 0 &&
+                        queueManager.npcsInQueue[0] == this &&
+                        agent.remainingDistance < 0.5f)
                     {
                         npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
                         OnTurn();
@@ -141,40 +125,33 @@ namespace NPC
                 case NPCState.WaitingForApproval:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
                     gameObject.layer = 6;
-                    // transform.DOLookAt(player.transform.rotation.eulerAngles + new Vector3(0, 180f, 0), 1f);
                     break;
 
                 case NPCState.MovingToAction:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     gameObject.layer = 0;
                     if (!agent.pathPending && agent.remainingDistance < 2f)
-                    {
                         currentState = NPCState.PerformingAction;
-                    }
                     break;
 
                 case NPCState.PerformingAction:
                     transform.position = ToiletAssigned.transform.position;
-                    if (Gender == "Male") transform.DORotate(new Vector3(0, 90f, 0), 1f, RotateMode.FastBeyond360);
-                    if (Gender == "Female") transform.DORotate(new Vector3(0, 270f, 0), 1f, RotateMode.FastBeyond360);
+                    if (Gender == "Male")
+                        transform.DORotate(new Vector3(0, 90f, 0), 1f, RotateMode.FastBeyond360);
+                    else if (Gender == "Female")
+                        transform.DORotate(new Vector3(0, 270f, 0), 1f, RotateMode.FastBeyond360);
+                    
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.SHITTING);
                     
-                    if (!isShitting) // Eğer zaten tuvaletini yapıyorsa tekrar başlatma
+                    if (!isShitting)
                     {
-                        isShitting = true; // Tekrar çağrılmasını engelle
-
+                        isShitting = true;
                         if (CreepinessLevel + Chance > 120)
-                        {
                             StartCoroutine(DoSteelShit());
-                        }
                         else if (Weight + Chance > 221)
-                        {
                             StartCoroutine(DoBrokerShit());
-                        }
                         else
-                        {
                             StartCoroutine(DoStandartShit());
-                        }
                     }
                     break;
 
@@ -184,10 +161,22 @@ namespace NPC
                     break;
 
                 case NPCState.KeyGiver:
-                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
-                    agent.SetDestination(Gender == "Female" ? new Vector3(3, 0, 1) : new Vector3(-3, 0, 1));
-                    if (agent.remainingDistance < 0.5f) npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
                     gameObject.layer = 6;
+                    npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+                    // TableManager üzerinden bekleme pozisyonuna yönlendirme
+                    if (table == null)
+                        table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
+                    
+                    if (!isTableRegistered)
+                    {
+                        table.RegisterNPC(this);
+                        isTableRegistered = true;
+                    }
+
+                    if (agent.remainingDistance < 0.5f)
+                    {
+                        npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
+                    }
                     break;
 
                 case NPCState.KeyThief:
@@ -197,66 +186,43 @@ namespace NPC
                 case NPCState.AllDone:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     gameObject.layer = 0;
-                    agent.SetDestination(new Vector3(10, 0, 20));
+                    agent.SetDestination(new Vector3(9, 0, 62));
                     break;
             }
         }
 
         /// <summary>
-        /// NPC'nin WC'ye gitmeye karar verdiği metod.
-        /// Burada random bir olasılık belirleyip, >15 ise kuyrukta sıraya giriyoruz.
+        /// Rastgele belirlenen olasılığa göre NPC WC kuyruğuna giriyor.
         /// </summary>
         void IsNPCGoingToWC()
         {
             float chanceToQueue = Random.Range(15f, 20f);
-
-            // Burada eğer NPC halihazırda "Neutral" durumdaysa, girsin. 
-            // chanceToQueue > 15f ise -> "Queuing" yap ve Register et.
             if (chanceToQueue > 15f && currentState == NPCState.Neutral)
             {
-                
-                
                 if (queueManager != null && queueManager.npcsInQueue.Count != 7)
                 {
                     currentState = NPCState.Queuing;
                     queueManager.RegisterNPC(this);
                 }
             }
-            else
-            {
-                // Aksi hâlde yine Neutral kal.
-                // (Zaten Neutral'da isek tekrar Neutral yapmamıza gerek yok.)
-            }
         }
 
         /// <summary>
-        /// QueueManager bizi hangi index’e konumlandırdıysa, oradaki pozisyona gideceğiz.
+        /// Bekleme pozisyonunu günceller. Artık her durumda agent.SetDestination çağrılıyor.
         /// </summary>
         public void SetQueueTarget(Vector3 targetPos, int index)
         {
             currentQueueTarget = targetPos;
             currentQueueIndex = index;
-
-            if (currentState == NPCState.Queuing)
-            {
-                agent.SetDestination(targetPos);
-            }
+            // Artık durum kontrolü olmadan hedef pozisyona yönlendiriyoruz.
+            agent.SetDestination(targetPos);
         }
 
-        /// <summary>
-        /// Sıranın başına gelince (index = 0) onay işlemlerini tetikleyebilirsin.
-        /// Örn. OnTurn() metodu.
-        /// </summary>
         public void OnTurn()
         {
-            //Debug.Log($"{gameObject.name} tuvalet tipini belirtiyor: {toiletType}");
             currentState = NPCState.WaitingForApproval;
-            
         }
 
-        /// <summary>
-        /// Oyuncu onay verince action’a gideceğiz.
-        /// </summary>
         public void ApproveAction()
         {
             currentState = NPCState.MovingToAction;
@@ -272,20 +238,23 @@ namespace NPC
         
         public void GiveTheKeyToThePlayer()
         {
-            
             HavingKey.gameObject.SetActive(true);
             currentState = NPCState.AllDone;
             transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = false;
             ToiletAssigned.GetComponent<Toilet>().isNPCAssigned = false;
             currencySystem.AddMoney(moneyToGive);
+
+            if (table == null)
+                table = GameObject.FindGameObjectWithTag("TableManager").GetComponent<Table>();
+            
+            table.ReleaseNPC(this);
+            isTableRegistered = false;
         }
 
         public void TakeKey(Key key)
         {
             key.gameObject.SetActive(false);
             StartCoroutine(MoveKeyToNPC(key));
-            //key.keyObject.DOMove(transform.position + new Vector3(0, 2f, 0), 1f);
-            
         }
 
         private IEnumerator MoveKeyToNPC(Key key)
@@ -298,7 +267,6 @@ namespace NPC
             while (elapsedTime < duration)
             {
                 elapsedTime += Time.deltaTime;
-                
                 key.keyObject.position = Vector3.Lerp(startPos, transform.position + new Vector3(0, 2f, 0), elapsedTime / duration);
                 key.keyObject.DORotate(Random.rotation.eulerAngles, 1f, RotateMode.FastBeyond360);
                 yield return null;
@@ -306,83 +274,55 @@ namespace NPC
             
             key.keyObject.gameObject.SetActive(false);
             transform.GetComponentInChildren<Key>().gameObject.GetComponent<MeshRenderer>().enabled = true;
-            
         }
 
         private IEnumerator DoStandartShit()
         {
             yield return new WaitForSeconds(6f);
-            Debug.Log("NPC Does standart shit");
+            Debug.Log("NPC does standard shit");
             ToiletAssigned.GetComponent<Toilet>().DoneShit(ToiletAssigned);
-            
             currentState = NPCState.PerformDone;
-            yield return null;
-
         }
         
         private IEnumerator DoBrokerShit()
         {
             yield return new WaitForSeconds(7f);
-            
-            Debug.Log("NPC Broke the toilet");
-            
-            
+            Debug.Log("NPC broke the toilet");
             currentState = NPCState.PerformDone;
-            
-            
         }
         
         private IEnumerator DoSteelShit()
         {
             yield return new WaitForSeconds(7f);
-            Debug.Log("NPC Steels the toilet");
-            
-            
+            Debug.Log("NPC steels the toilet");
             currentState = NPCState.PerformDone;
-            
         }
 
-        
-
-        /// <summary>
-        /// Gerçek tuvalet kullanma animasyonu / bekleme vs.
-        /// </summary>
         void PerformAction()
         {
-            Debug.Log($"{gameObject.name} tuvalet kullanılıyor: {toiletType}");
-            // Bir süre sonra biter
+            Debug.Log($"{gameObject.name} is using the toilet: {toiletType}");
             Invoke(nameof(FinishAction), 5f);
         }
 
         void FinishAction()
         {
-            Debug.Log($"{gameObject.name} tuvalet kullanımını tamamladı.");
+            Debug.Log($"{gameObject.name} finished using the toilet.");
             currentState = NPCState.PerformDone;
-
-            // Kuyruktan çıkart. (Artık sıramızı kullandık, diğerleri öne geçsin.)
             if (queueManager != null)
-            {
                 queueManager.UnregisterNPC(this);
-            }
         }
 
         public string GetInteractionText()
         {
             if (currentState == NPCState.KeyGiver)
-            {
                 return "Receive the key\nPress [E]";
-            }
-
             return null;
         }
 
         public void Interact()
         {
             if (currentState == NPCState.KeyGiver)
-            {
                 GiveTheKeyToThePlayer();
-            }
-            
         }
     }
 }
