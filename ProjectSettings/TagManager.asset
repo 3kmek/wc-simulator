@@ -12,6 +12,7 @@ TagManager:
   - FemaleSection
   - MaleSection
   - Table
+  - CleaningManager
   layers:
   - Default
   - TransparentFX

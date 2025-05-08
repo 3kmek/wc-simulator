@@ -169,7 +169,7 @@ namespace NPC
                     
                     if (!isTableRegistered)
                     {
-                        table.RegisterNPC(this);
+                        table.RegisterNPCtoTable(this);
                         isTableRegistered = true;
                     }
 
@@ -177,6 +177,7 @@ namespace NPC
                     {
                         npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
                     }
+                    
                     break;
 
                 case NPCState.KeyThief:
@@ -245,7 +246,7 @@ namespace NPC
             currencySystem.AddMoney(moneyToGive);
 
             if (table == null)
-                table = GameObject.FindGameObjectWithTag("TableManager").GetComponent<Table>();
+                table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
             
             table.ReleaseNPC(this);
             isTableRegistered = false;

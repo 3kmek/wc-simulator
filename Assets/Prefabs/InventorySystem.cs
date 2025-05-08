@@ -53,7 +53,11 @@ public class InventorySystem : MonoBehaviour
                 Slot = playerInteraction._currentHeldObject.gameObject;
                 holderHasSomething = true;
                 _holdable = Slot.GetComponent<IHoldable>();
-                _holdable.Use();
+                if (Input.GetMouseButtonDown(0))
+                {
+                    _holdable.Use();
+                }
+                
             }
         }
         

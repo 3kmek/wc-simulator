@@ -4,13 +4,14 @@ using TMPro;
 using NPC;
 using UnityEditor;
 using UnityEngine.Serialization;
+using System.Collections;
+
 
 public class PlayerInteraction : MonoBehaviour
 {
     [Header("Interaction")]
     [SerializeField] float interactRange = 3f;
     [SerializeField] private LayerMask interactableLayer; // Layer 6 ve 8'i içerdiğinden emin olun
-    [SerializeField] private TextMeshProUGUI interactPrompt;
     [SerializeField] private Camera playerCamera;
     [SerializeField] public Transform _holdPosition;
     private GameObject lastHighlightedObject;
@@ -72,7 +73,7 @@ public class PlayerInteraction : MonoBehaviour
         }
         else
         {
-            interactPrompt.enabled = false;
+            UITextManager.Instance.interactPrompt.enabled = false;
         }
     }
 
@@ -111,13 +112,13 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (!hit.transform)
         {
-            interactPrompt.enabled = false;
+            UITextManager.Instance.interactPrompt.enabled = false;
             return;
         }
 
         IInteractable interactable = hit.transform.GetComponent<IInteractable>();
-        interactPrompt.enabled = interactable != null;
-        interactPrompt.text = interactable?.GetInteractionText();
+        UITextManager.Instance.interactPrompt.enabled = interactable != null;
+        UITextManager.Instance.interactPrompt.text = interactable?.GetInteractionText();
     }
     
     private void HandleInteractionInput()
@@ -131,9 +132,9 @@ public class PlayerInteraction : MonoBehaviour
         {
             TryInteractWhileHolding();
         }
-        
-        
     }
+
+    
     
     private void TryInteract()
     {
@@ -146,23 +147,60 @@ public class PlayerInteraction : MonoBehaviour
             IHoldable holdable = hit.transform.GetComponent<IHoldable>();
             if (holdable != null)
             {
+                UITextManager.Instance.warningPrompt.enabled = false;
                 _currentHeldObject = hit.transform.gameObject;
                 holdable.OnPickup(_holdPosition);
                 IsInteractWhileHolding = true;
                 ResetObjectHighlight(); // EKLENDİ
+                
+                
             }
         }
-    }private void TryInteractWhileHolding()
+    }
+    private void TryInteractWhileHolding()
     {
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+
         if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer))
         {
-            IInteractable interactable = hit.transform.GetComponent<IInteractable>();
-            interactable?.Interact();
-            ResetObjectHighlight();
-            
+            var interactable = hit.transform.GetComponent<IInteractable>();
+            var heldPoop = _currentHeldObject?.GetComponent<WC.Poop>();
+
+            if (interactable != null && heldPoop != null)
+            {
+                interactable.Interact();
+                ResetObjectHighlight();
+                UITextManager.Instance.warningPrompt.enabled = false;
+
+                // Coroutine iptal et
+                if (warningCoroutine != null)
+                    StopCoroutine(warningCoroutine);
+            }
+            else if (interactable != null && heldPoop == null)
+            {
+                UITextManager.Instance.warningPrompt.text = "Your hands are full!";
+                UITextManager.Instance.warningPrompt.enabled = true;
+
+                // Zaten çalışan bir coroutine varsa durdur
+                if (warningCoroutine != null)
+                    StopCoroutine(warningCoroutine);
+
+                warningCoroutine = StartCoroutine(DisableWarningPromptAfterDelay(1f));
+            }
         }
     }
+    
+    private Coroutine warningCoroutine;
+
+    private IEnumerator DisableWarningPromptAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        UITextManager.Instance.warningPrompt.enabled = false;
+        warningCoroutine = null;
+    }
+
+
+
     
 
     

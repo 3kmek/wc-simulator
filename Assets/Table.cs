@@ -18,7 +18,7 @@ public class Table : MonoBehaviour
     /// NPC’nin masada beklemesi için sıraya eklenmesi.
     /// </summary>
     /// <param name="npc">Beklemeye başlayacak NPC</param>
-    public void RegisterNPC(NPCController npc)
+    public void RegisterNPCtoTable(NPCController npc)
     {
         if (npc == null) return;
 
