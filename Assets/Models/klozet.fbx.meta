@@ -1,14 +1,14 @@
 fileFormatVersion: 2
-guid: 602c9842b031b1b40832ff2fe7eb1296
+guid: 89dcbabfa2a888c4d8d2d18c41c63656
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
   externalObjects:
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: Material.001
-    second: {fileID: 2100000, guid: 230eba83271d92144aa47fe174149997, type: 2}
+      name: dirty-stain-on-toilet-wall-260nw-1364236658
+    second: {fileID: 2800000, guid: 1d7f2370f2dd6b8408ae227f86fe2476, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

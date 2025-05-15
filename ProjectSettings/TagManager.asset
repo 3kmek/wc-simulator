@@ -13,6 +13,7 @@ TagManager:
   - MaleSection
   - Table
   - CleaningManager
+  - NavMeshManager
   layers:
   - Default
   - TransparentFX

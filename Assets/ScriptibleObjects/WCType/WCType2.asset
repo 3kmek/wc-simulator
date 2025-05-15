@@ -10,13 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: adc0c7c57f9f9ca42a6b128d800cd76e, type: 3}
-  m_Name: WCType
+  m_Name: WCType2
   m_EditorClassIdentifier: 
-  wcName: Bucket
-  Level: 1
+  wcName: Klozet1
+  Level: 2
   Durability: 5
-  ShitLimit: 1
-  wcGender: Male
+  ShitLimit: 2
   hasAutoFlush: 0
   isLuxury: 0
   flushSound: {fileID: 0}

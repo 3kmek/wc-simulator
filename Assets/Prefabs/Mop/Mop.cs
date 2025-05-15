@@ -32,6 +32,10 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
     [SerializeField] private bool didTouch = false;
     
     private bool isAnimating = false;
+
+    [SerializeField] private GameObject mopHolderObject;
+    [SerializeField] Vector3 mopHolderPos;
+    [SerializeField] Vector3 mopHolderRot;
     
     private bool holdingAnimDone = false;
     // Start is called before the first frame update
@@ -51,11 +55,13 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
         // Texture değiş
         if (MopCurrentFilth == MopCapacity)
         {
-            rend.material.SetTexture("Texture2D_4450AB74", filthTexture);;
+            //rend.material.SetTexture("_MainTex", filthTexture);;
+            rend.material.mainTexture = filthTexture;
         }
         else
         {
-            rend.material.SetTexture("Texture2D_4450AB74", defaultTexture);
+            //rend.material.SetTexture("Texture2D_4450AB74", defaultTexture);
+            rend.material.mainTexture = defaultTexture;
         }
     }
 
@@ -78,7 +84,7 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
     {
         
         rend = gameObject.GetComponent<Renderer>();
-        defaultTexture = rend.material.GetTexture("_MainTex");
+        defaultTexture = rend.material.mainTexture;
         rb = GetComponent<Rigidbody>();
         collider1 = GetComponent<BoxCollider>();
         holder = GameObject.FindGameObjectWithTag("Player").transform.GetChild(0).GetChild(0).GetChild(0);
@@ -86,6 +92,8 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
         player = GameObject.FindGameObjectWithTag("Player");
         interactBox = transform.GetChild(0).GetComponent<BoxCollider>();
         animator = transform.GetComponent<Animator>();
+        mopHolderPos = mopHolderObject.transform.position;
+        mopHolderRot = mopHolderObject.transform.rotation.eulerAngles;
     }
 
     public void OnPickup(Transform holdPosition)
@@ -117,7 +125,8 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
         {
             animator.enabled = false;
             transform.parent.SetParent(null);
-            rb.isKinematic = false;
+            transform.parent.SetParent(mopHolderObject.transform);
+            rb.isKinematic = true;
             collider1.enabled = true;
             collider2.enabled = true;
             IsHolding = false;
@@ -130,7 +139,10 @@ public class Mop : MonoBehaviour, IHoldable, IInteractable
             player.GetComponent<PlayerInteraction>()._currentHeldObject = null;
             player.GetComponent<PlayerInteraction>().isHoldingSomething = false;
 
-            
+            transform.DOMove(mopHolderPos, 0.5f).OnComplete(() =>
+            {
+                transform.DORotate(mopHolderRot, 0.5f);
+            });
         }
     }
 

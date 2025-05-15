@@ -31,7 +31,7 @@ public class CleaningManager : MonoBehaviour
                 //HandlePlacingObject();
                 //HandleKeyboardInput();
                 //HandleMouseScroll();
-                GridSystem.Instance.RemoveObject();
+                //GridSystem.Instance.RemoveObject();
             }
         }
     }

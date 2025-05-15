@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 148f1ec5a408a3a498dc457cf5f04583
+guid: 73da4e5622023864f9d60488f208ab66
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,23 +7,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: MopBucket1
-    second: {fileID: 2100000, guid: 3d617820da17ee644a9ca76fa9e96f9a, type: 2}
+      name: MopBucketMat
+    second: {fileID: 2100000, guid: c26283f1101f6f94da7bdf54e43decb1, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: MopBucket1WaterLevel
-    second: {fileID: 2100000, guid: d63f9123f245f2f4da2f838116c87c30, type: 2}
+      name: WaterLevelMat
+    second: {fileID: 2100000, guid: 0fadfb3999c8cbc41b9febc9a954f70f, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: mopBucket1
-    second: {fileID: 2800000, guid: 1ea23bbe3ecacd443baf4d823843355c, type: 3}
+    second: {fileID: 2800000, guid: 93f2a4dd84a311648ac891bf2373bbb7, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: water
-    second: {fileID: 2800000, guid: ec8faa11a09d6fc45a1c18252149806c, type: 3}
+      name: mopBucket1Water
+    second: {fileID: 2800000, guid: 1b30f430951e8404aa050096c925fe16, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

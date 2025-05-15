@@ -139,7 +139,7 @@ namespace NPC
                     if (Gender == "Male")
                         transform.DORotate(new Vector3(0, 90f, 0), 1f, RotateMode.FastBeyond360);
                     else if (Gender == "Female")
-                        transform.DORotate(new Vector3(0, 270f, 0), 1f, RotateMode.FastBeyond360);
+                        transform.DORotate(ToiletAssigned.transform.rotation.eulerAngles, 1f, RotateMode.FastBeyond360);
                     
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.SHITTING);
                     

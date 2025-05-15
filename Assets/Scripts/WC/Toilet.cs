@@ -102,11 +102,25 @@ namespace WC
            if (selectedPoop.name == "Poop2")
            {
                selectedPoop.transform.localScale = new Vector3(Random.Range(0.3f, 0.6f), Random.Range(0.3f, 0.6f), Random.Range(0.3f, 0.6f));
+               
                selectedPoop.transform.DORotate(new Vector3(287.875244f,9.6459322f,300.278778f), 1f, RotateMode.FastBeyond360);
            }
-           Vector3 spawnLocation = ToiletAssigned.transform.position + new Vector3(0f, 1.3f, 0f);
-           GameObject poop = Instantiate(selectedPoop, spawnLocation, Quaternion.identity);
-           poop.transform.DOMove(transform.position + new Vector3(0, .5f, 0), .5f);
+           
+           if(ToiletAssigned.GetComponent<Toilet>().wcType.Level == 1 )
+           {
+               Vector3 spawnLocation = ToiletAssigned.transform.position + new Vector3(0f, 1.3f, 0f);  
+               GameObject poop = Instantiate(selectedPoop, spawnLocation, Quaternion.identity);
+               poop.transform.DOMove(transform.position + new Vector3(0, .5f, 0), .5f);
+           };
+           
+           if(ToiletAssigned.GetComponent<Toilet>().wcType.Level == 2 )
+           {
+               Vector3 spawnLocation = ToiletAssigned.transform.position + new Vector3(0f, 1.5f, 0f);  
+               GameObject poop = Instantiate(selectedPoop, spawnLocation, Quaternion.identity);
+               poop.transform.DOMove(transform.position + new Vector3(0, 1.5f, 0), .5f);
+           };
+           
+           
            
         }
 
