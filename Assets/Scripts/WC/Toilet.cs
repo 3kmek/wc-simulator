@@ -31,6 +31,8 @@ namespace WC
         [SerializeField] private Collider[] _colliders;
         
         [SerializeField] Vector3 colliderBoxSize = new Vector3(2, 2, 2);
+
+        [SerializeField] public GameObject poopHolder;
         
         
         private void Start()
@@ -108,16 +110,16 @@ namespace WC
            
            if(ToiletAssigned.GetComponent<Toilet>().wcType.Level == 1 )
            {
-               Vector3 spawnLocation = ToiletAssigned.transform.position + new Vector3(0f, 1.3f, 0f);  
+               Vector3 spawnLocation = ToiletAssigned.GetComponent<Toilet>().poopHolder.transform.position;  
                GameObject poop = Instantiate(selectedPoop, spawnLocation, Quaternion.identity);
-               poop.transform.DOMove(transform.position + new Vector3(0, .5f, 0), .5f);
+               poop.transform.DOMove(spawnLocation, .5f);
            };
            
            if(ToiletAssigned.GetComponent<Toilet>().wcType.Level == 2 )
            {
-               Vector3 spawnLocation = ToiletAssigned.transform.position + new Vector3(0f, 1.5f, 0f);  
+               Vector3 spawnLocation = ToiletAssigned.GetComponent<Toilet>().poopHolder.transform.position;  
                GameObject poop = Instantiate(selectedPoop, spawnLocation, Quaternion.identity);
-               poop.transform.DOMove(transform.position + new Vector3(0, 1.5f, 0), .5f);
+               poop.transform.DOMove(spawnLocation, .5f);
            };
            
            

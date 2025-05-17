@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3731349364312173816
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8640005196434365954}
+  m_Layer: 0
+  m_Name: PoopHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8640005196434365954
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3731349364312173816}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.018, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4945538291035079317}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &4839308715108623742
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -90,7 +121,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 45edfac5ceb8b6b4482f1408cf7457ee,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8640005196434365954}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 45edfac5ceb8b6b4482f1408cf7457ee,
         type: 3}
@@ -105,6 +140,12 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 545157738446760877}
   m_SourcePrefab: {fileID: 100100000, guid: 45edfac5ceb8b6b4482f1408cf7457ee, type: 3}
+--- !u!4 &4945538291035079317 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 45edfac5ceb8b6b4482f1408cf7457ee,
+    type: 3}
+  m_PrefabInstance: {fileID: 4839308715108623742}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &5758349597282752559 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 45edfac5ceb8b6b4482f1408cf7457ee,
@@ -131,6 +172,7 @@ MonoBehaviour:
   isNPCAssigned: 0
   _colliders: []
   colliderBoxSize: {x: 3, y: 2, z: 3}
+  poopHolder: {fileID: 3731349364312173816}
 --- !u!64 &8017232115183651745
 MeshCollider:
   m_ObjectHideFlags: 0

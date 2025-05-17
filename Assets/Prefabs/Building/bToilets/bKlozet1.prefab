@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1116330492642659355
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1047807404854473025}
+  m_Layer: 0
+  m_Name: PoopHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1047807404854473025
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116330492642659355}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.567, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7068847042880681199}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1526995532267346182
 GameObject:
   m_ObjectHideFlags: 0
@@ -48,13 +79,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wcType: {fileID: 11400000, guid: 447b2b717651615498fe834ab0ee05cf, type: 2}
-  wcGender: 2
+  wcGender: 0
   PoopTypes: []
   _poopAmount: 0
   isToiletFullOfShit: 0
   isNPCAssigned: 0
   _colliders: []
   colliderBoxSize: {x: 2, y: 2, z: 2}
+  poopHolder: {fileID: 1116330492642659355}
 --- !u!208 &2686063571958098672
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -115,6 +147,7 @@ Transform:
   m_Children:
   - {fileID: 7703417804491163219}
   - {fileID: 4236744647657042999}
+  - {fileID: 1047807404854473025}
   m_Father: {fileID: 5643285733404065436}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7960482440654611924

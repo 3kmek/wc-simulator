@@ -180,7 +180,8 @@ public class GridSystem : MonoBehaviour
             // Ghost'un kendisini, vs. yok sayabiliriz
             if (c.gameObject == ghostObject) continue;
             if (c.name == "womenChecker") continue; // Proje özel bir obje gibi duruyor
-
+            if (c.CompareTag("Player")) continue;
+            if (c.GetComponent<Hammer>()) continue;
             // Herhangi başka bir şeye çarptıysa false
             return false;
         }
