@@ -6,6 +6,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,8 +36,8 @@ public class FirstPersonController : MonoBehaviour
     public Color crosshairColor = Color.white;
 
     // Internal Variables
-    private float yaw = 0.0f;
-    private float pitch = 0.0f;
+    public float yaw = 0.0f;
+    public float pitchX = 0.0f;
     private Image crosshairObject;
 
     #region Camera Zoom Variables
@@ -131,6 +132,13 @@ public class FirstPersonController : MonoBehaviour
 
     #endregion
 
+    
+    
+    public Quaternion previousRotation;
+    public bool VoyeurMode;
+    public bool allowLookUpdate = true;
+    
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -205,26 +213,32 @@ public class FirstPersonController : MonoBehaviour
         #region Camera
 
         // Control camera movement
-        if(cameraCanMove)
+        if (cameraCanMove && allowLookUpdate)
         {
-            yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
-
-            if (!invertCamera)
+            if (VoyeurMode)
             {
-                pitch -= mouseSensitivity * Input.GetAxis("Mouse Y");
+                yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+                if (yaw > 180f) yaw -= 360f;
+
+                pitchX += (invertCamera ? 1 : -1) * mouseSensitivity * Input.GetAxis("Mouse Y");
+
+                pitchX = Mathf.Clamp(pitchX, -maxLookAngle, maxLookAngle);
+                yaw = Mathf.Clamp(yaw, -70, 70);
+
+                playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
             }
             else
             {
-                // Inverted Y
-                pitch += mouseSensitivity * Input.GetAxis("Mouse Y");
+                yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
+                pitchX += (invertCamera ? 1 : -1) * mouseSensitivity * Input.GetAxis("Mouse Y");
+
+                pitchX = Mathf.Clamp(pitchX, -maxLookAngle, maxLookAngle);
+
+                transform.localEulerAngles = new Vector3(0, yaw, 0);
+                playerCamera.transform.localEulerAngles = new Vector3(pitchX, 0, 0);
             }
-
-            // Clamp pitch between lookAngle
-            pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
-
-            transform.localEulerAngles = new Vector3(0, yaw, 0);
-            playerCamera.transform.localEulerAngles = new Vector3(pitch, 0, 0);
         }
+
 
         #region Camera Zoom
 
@@ -355,12 +369,60 @@ public class FirstPersonController : MonoBehaviour
         }
 
         #endregion
+        
+        HandleVoyeurMode();
 
         CheckGround();
 
         if(enableHeadBob)
         {
             HeadBob();
+        }
+    }
+
+    void HandleVoyeurMode()
+    {
+        if (VoyeurMode)
+        {
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                VoyeurMode = false;
+                playerCamera.transform.SetParent(null);
+                playerCamera.transform.SetParent(joint);
+                
+                cameraCanMove = false;
+                
+                playerCamera.transform.DOMove(playerCamera.transform.position + new Vector3(0,0, 1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
+                {
+                    playerCamera.transform.DORotate(previousRotation.eulerAngles, .7f).SetEase(Ease.InOutSine).SetEase(Ease.InOutSine).OnComplete(()=>
+                    {
+                        playerCamera.transform.DOMove(joint.transform.position, .7f).SetEase(Ease.InOutSine).OnComplete(() =>
+                        {
+                            playerCamera.transform.rotation = previousRotation;
+                            cameraCanMove = true;
+                            playerCanMove = true;
+                            enableHeadBob = true;
+
+                            Vector3 camEuler = previousRotation.eulerAngles;
+                            yaw = camEuler.y;
+                            pitchX = camEuler.x;
+
+
+                            
+                        });
+                        
+                    });
+                    
+                    //Camera.main.transform.position = camHolder.position;
+                });
+                
+                
+
+                //playerCamera.transform.position = previousPosition;
+                //playerCamera.transform.rotation = previousRotation;
+                
+                
+            }
         }
     }
 

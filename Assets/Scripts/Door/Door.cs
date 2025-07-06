@@ -33,7 +33,7 @@ public class Door : MonoBehaviour
         
         Debug.DrawRay(ray.origin, ray.direction * interactRange, Color.green, 0.1f);
 
-        if (hitSomething)
+        if (hitSomething && hit.transform.CompareTag("Player"))
         {
             voyeurVFX.SetActive(true);
         }
