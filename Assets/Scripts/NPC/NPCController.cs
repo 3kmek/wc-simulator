@@ -15,6 +15,8 @@ namespace NPC
         WaitingForApproval,
         MovingToAction,
         PerformingAction,
+        InFrontOfDoor,
+        EnteringTheCubicle,
         PerformDone,
         KeyGiver,
         KeyThief,
@@ -56,6 +58,10 @@ namespace NPC
         // Table (Key Giver) Sistemi
         private Table table;
         private bool isTableRegistered = false;
+        
+        // CUBICLE VARIABLES
+        public Cubicle Cubicle;
+        
         
         void Start()
         {
@@ -130,8 +136,35 @@ namespace NPC
                 case NPCState.MovingToAction:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
                     gameObject.layer = 0;
-                    if (!agent.pathPending && agent.remainingDistance < 2f)
+                    if (!agent.pathPending && agent.remainingDistance < 0.01f)
+                    {
+                        currentState = NPCState.InFrontOfDoor;
+                    }
+                        
+                    break;
+                
+                case NPCState.InFrontOfDoor:
+
+                    if (Cubicle.cubicleDoor.isNPCLookingAndClose && !Cubicle.isCubicleBusy)
+                    {
+                        npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
+                        StartCoroutine(NPCWaitsTheOpenCubicle());
+                    }
+                    
+                    
+
+                    
+                    break;
+                
+                case NPCState.EnteringTheCubicle:
+
+                    if (!agent.pathPending && agent.remainingDistance < 0.01f)
+                    {
                         currentState = NPCState.PerformingAction;
+                        Cubicle.cubicleDoor.CloseDoor();
+                        Cubicle.isCubicleBusy = true;
+                    }
+                    
                     break;
 
                 case NPCState.PerformingAction:
@@ -156,6 +189,8 @@ namespace NPC
                     break;
 
                 case NPCState.PerformDone:
+                    Cubicle.isCubicleBusy = false;
+                    
                     isShitting = false;
                     currentState = NPCState.KeyGiver;
                     break;
@@ -191,6 +226,8 @@ namespace NPC
                     break;
             }
         }
+        
+        
 
         /// <summary>
         /// Rastgele belirlenen olasılığa göre NPC WC kuyruğuna giriyor.
@@ -233,6 +270,7 @@ namespace NPC
         public void AssignNPCToToilet(GameObject selectedToilet, Key key)
         {
             ToiletAssigned = selectedToilet;
+            ToiletAssigned.GetComponent<Toilet>().Cubicle = Cubicle;
             ToiletAssigned.GetComponent<Toilet>().isNPCAssigned = true;
             TakeKey(key);
         }
@@ -256,6 +294,15 @@ namespace NPC
         {
             key.gameObject.SetActive(false);
             StartCoroutine(MoveKeyToNPC(key));
+        }
+
+        IEnumerator NPCWaitsTheOpenCubicle()
+        {
+            yield return new WaitForSeconds(1f);
+            currentState = NPCState.EnteringTheCubicle;
+            Cubicle.cubicleDoor.OpenDoor();
+            npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
+            agent.SetDestination(ToiletAssigned.transform.position);
         }
 
         private IEnumerator MoveKeyToNPC(Key key)
@@ -282,6 +329,9 @@ namespace NPC
             yield return new WaitForSeconds(6f);
             Debug.Log("NPC does standard shit");
             ToiletAssigned.GetComponent<Toilet>().DoneShit(ToiletAssigned);
+            yield return new WaitForSeconds(0.5f);
+            Cubicle.cubicleDoor.OpenDoor();
+            
             currentState = NPCState.PerformDone;
         }
         
@@ -289,6 +339,10 @@ namespace NPC
         {
             yield return new WaitForSeconds(7f);
             Debug.Log("NPC broke the toilet");
+            
+            yield return new WaitForSeconds(0.5f);
+            Cubicle.cubicleDoor.OpenDoor();
+            
             currentState = NPCState.PerformDone;
         }
         
@@ -296,6 +350,10 @@ namespace NPC
         {
             yield return new WaitForSeconds(7f);
             Debug.Log("NPC steels the toilet");
+            
+            yield return new WaitForSeconds(0.5f);
+            Cubicle.cubicleDoor.OpenDoor();
+            
             currentState = NPCState.PerformDone;
         }
 

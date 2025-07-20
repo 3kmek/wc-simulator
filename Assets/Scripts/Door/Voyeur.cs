@@ -9,9 +9,12 @@ public class Voyeur : MonoBehaviour, IInteractable
     FirstPersonController player;
 
     [SerializeField] Transform camHolder;
+    
+    public MeshRenderer meshRenderer;
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+        
     }
 
     // Update is called once per frame
@@ -22,11 +25,12 @@ public class Voyeur : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
-        return "Sapik time";
+        return "Spy the customer [E]";
     }
 
     public void Interact()
     {
+        
         player.previousRotation = player.playerCamera.transform.rotation;
         
         player.playerCamera.transform.SetParent(null);

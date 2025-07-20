@@ -18,6 +18,8 @@ namespace WC
 
     public class Toilet : MonoBehaviour
     {
+        public Cubicle Cubicle;
+        
         public WCTypeScriptableObject wcType;
         
         public WCGender wcGender;
@@ -33,6 +35,10 @@ namespace WC
         [SerializeField] Vector3 colliderBoxSize = new Vector3(2, 2, 2);
 
         [SerializeField] public GameObject poopHolder;
+        
+        
+        
+        
         
         
         private void Start()

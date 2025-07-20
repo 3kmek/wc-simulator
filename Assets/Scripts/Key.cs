@@ -1,6 +1,7 @@
 using System;
 using NPC;
 using UnityEngine;
+using WC;
 using Random = UnityEngine.Random;
 
 public class Key : MonoBehaviour, IInteractable
@@ -74,7 +75,8 @@ public class Key : MonoBehaviour, IInteractable
         // Random bir tuvalet seç ve NPC’ye ata
         GameObject selectedToilet = toiletList[Random.Range(0, toiletList.Count)];
         npc.selectedToilet = selectedToilet;
-        npc.actionPosition = selectedToilet.transform;
+        npc.Cubicle = selectedToilet.GetComponent<Toilet>().Cubicle;
+        npc.actionPosition = npc.Cubicle.cubicleNPCWaitingPlace.transform;
         npc.ApproveAction();
         npc.AssignNPCToToilet(selectedToilet, this);
 
