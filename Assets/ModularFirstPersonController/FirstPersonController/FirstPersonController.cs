@@ -134,9 +134,18 @@ public class FirstPersonController : MonoBehaviour
 
     
     
+    #region Voyeur Mode // Sitting Mode
+    
+    // Voyeur Mode Variables
     public Quaternion previousRotation;
     public bool VoyeurMode;
     public bool allowLookUpdate = true;
+    
+    // Sitting Mode Variables
+    
+    public bool IsPlayerSitting;
+    
+    #endregion
     
 
     private void Awake()
@@ -223,6 +232,19 @@ public class FirstPersonController : MonoBehaviour
                 pitchX += (invertCamera ? 1 : -1) * mouseSensitivity * Input.GetAxis("Mouse Y");
 
                 pitchX = Mathf.Clamp(pitchX, -maxLookAngle, maxLookAngle);
+                yaw = Mathf.Clamp(yaw, -70, 70);
+
+                playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
+            }
+
+            if (IsPlayerSitting)
+            {
+                yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+                if (yaw > 180f) yaw -= 360f;
+
+                pitchX += (invertCamera ? 1 : -1) * mouseSensitivity * Input.GetAxis("Mouse Y");
+
+                pitchX = Mathf.Clamp(pitchX, -(maxLookAngle- 10f), maxLookAngle -30f );
                 yaw = Mathf.Clamp(yaw, -70, 70);
 
                 playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
@@ -371,6 +393,8 @@ public class FirstPersonController : MonoBehaviour
         #endregion
         
         HandleVoyeurMode();
+        
+        HandleSittingMode();
 
         CheckGround();
 
@@ -380,50 +404,177 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    public void EnterVoyeurMode(Transform camHolder)
+    {
+        previousRotation = playerCamera.transform.rotation;
+        
+        playerCanMove = false;
+        cameraCanMove = false;
+        allowLookUpdate = false;
+        
+        playerCamera.transform.SetParent(null);
+        playerCamera.transform.SetParent(camHolder);
+        
+        
+        
+        playerCamera.transform.DOLocalRotate(new Vector3(0,0,-30f), 0.3f);
+
+        playerCamera.transform.DOMove(camHolder.position + new Vector3(0,0,1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
+        {
+            playerCamera.transform.DOMove(camHolder.position, 1f).SetEase(Ease.InOutSine).OnComplete(() =>
+            {
+                playerCamera.transform.DORotate(camHolder.localEulerAngles, .5f).SetEase(Ease.InOutSine).OnComplete(() =>
+                    {
+                        cameraCanMove = true;
+                        
+                        VoyeurMode = true;
+                        enableHeadBob = false;
+                        
+                        yaw = 0;
+                        pitchX = 0;
+                        
+                        allowLookUpdate = true;
+                    }
+                );
+                
+            });
+        });
+    }
+
+    public void ExitVoyeurMode()
+    {
+        VoyeurMode = false;
+        playerCamera.transform.SetParent(null);
+        playerCamera.transform.SetParent(joint);
+                
+        cameraCanMove = false;
+                
+        playerCamera.transform.DOMove(playerCamera.transform.position + new Vector3(0,0, 1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
+        {
+            playerCamera.transform.DORotate(previousRotation.eulerAngles, .7f).SetEase(Ease.InOutSine).SetEase(Ease.InOutSine).OnComplete(()=>
+            {
+                playerCamera.transform.DOMove(joint.transform.position, .7f).SetEase(Ease.InOutSine).OnComplete(() =>
+                {
+                    playerCamera.transform.rotation = previousRotation;
+                    cameraCanMove = true;
+                    playerCanMove = true;
+                    enableHeadBob = true;
+
+                    Vector3 camEuler = previousRotation.eulerAngles;
+                    yaw = camEuler.y;
+                    pitchX = camEuler.x;
+
+
+                            
+                });
+                        
+            });
+                    
+            //Camera.main.transform.position = camHolder.position;
+        });
+                
+                
+
+        //playerCamera.transform.position = previousPosition;
+        //playerCamera.transform.rotation = previousRotation;
+    }
+
     void HandleVoyeurMode()
     {
         if (VoyeurMode)
         {
             if (Input.GetKeyDown(KeyCode.Q))
             {
-                VoyeurMode = false;
-                playerCamera.transform.SetParent(null);
-                playerCamera.transform.SetParent(joint);
                 
-                cameraCanMove = false;
-                
-                playerCamera.transform.DOMove(playerCamera.transform.position + new Vector3(0,0, 1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
-                {
-                    playerCamera.transform.DORotate(previousRotation.eulerAngles, .7f).SetEase(Ease.InOutSine).SetEase(Ease.InOutSine).OnComplete(()=>
-                    {
-                        playerCamera.transform.DOMove(joint.transform.position, .7f).SetEase(Ease.InOutSine).OnComplete(() =>
-                        {
-                            playerCamera.transform.rotation = previousRotation;
-                            cameraCanMove = true;
-                            playerCanMove = true;
-                            enableHeadBob = true;
-
-                            Vector3 camEuler = previousRotation.eulerAngles;
-                            yaw = camEuler.y;
-                            pitchX = camEuler.x;
-
-
-                            
-                        });
-                        
-                    });
-                    
-                    //Camera.main.transform.position = camHolder.position;
-                });
-                
-                
-
-                //playerCamera.transform.position = previousPosition;
-                //playerCamera.transform.rotation = previousRotation;
-                
+                ExitVoyeurMode();
                 
             }
         }
+    }
+
+    void HandleSittingMode()
+    {
+        if (IsPlayerSitting)
+        {
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                
+                ExitSittingMode();
+                
+            }
+        }
+    }
+
+    public void EnterSittingMode(Transform camHolder)
+    {
+        
+        playerCanMove = false;
+        cameraCanMove = false;
+        allowLookUpdate = false;
+        
+        previousRotation = playerCamera.transform.rotation;
+        
+        playerCamera.transform.SetParent(null);
+        playerCamera.transform.SetParent(camHolder);
+
+        playerCamera.transform.DORotateQuaternion(camHolder.rotation, 0.8f);
+        
+        //playerCamera.transform.DOLocalRotate(new Vector3(0,0,-30f), 0.3f);
+
+        playerCamera.transform.DOMove(camHolder.position, .8f).SetEase(Ease.InOutSine).OnComplete(() =>
+        {
+            //playerCamera.transform.DOMove(camHolder.position, 1f).SetEase(Ease.InOutSine).OnComplete(() =>
+            //{
+                //playerCamera.transform.DORotate(camHolder.localEulerAngles, .5f).SetEase(Ease.InOutSine).OnComplete(() =>
+                    //{
+                        cameraCanMove = true;
+                        
+                        IsPlayerSitting = true;
+                        enableHeadBob = false;
+                        
+                        yaw = 0;
+                        pitchX = 0;
+                        
+                        allowLookUpdate = true;
+                   // }
+               // );
+                
+            //});
+        });
+        
+    }
+
+    public void ExitSittingMode()
+    {
+        IsPlayerSitting = false;
+        playerCamera.transform.SetParent(null);
+        playerCamera.transform.SetParent(joint);
+                
+        cameraCanMove = false;
+                
+        //playerCamera.transform.DOMove(playerCamera.transform.position + new Vector3(0,0, 1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
+        //{
+            playerCamera.transform.DORotate(previousRotation.eulerAngles, .8f).SetEase(Ease.InOutSine).SetEase(Ease.InOutSine).OnComplete(()=>
+            {
+                
+                        
+            });
+            playerCamera.transform.DOMove(joint.transform.position, .8f).SetEase(Ease.InOutSine).OnComplete(() =>
+            {
+                playerCamera.transform.rotation = previousRotation;
+                cameraCanMove = true;
+                playerCanMove = true;
+                enableHeadBob = true;
+
+                Vector3 camEuler = previousRotation.eulerAngles;
+                yaw = camEuler.y;
+                pitchX = camEuler.x;
+
+                    
+            });        
+           
+        //});
+        
     }
 
     void FixedUpdate()

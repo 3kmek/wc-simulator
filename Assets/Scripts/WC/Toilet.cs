@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using ScriptibleObjects;
+using ScriptableObjects;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ScriptibleObjects;
+using ScriptableObjects;
 using WC;
 
 public class ToiletManager : MonoBehaviour

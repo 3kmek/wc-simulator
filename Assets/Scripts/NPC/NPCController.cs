@@ -1,8 +1,9 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using DG.Tweening;
-using ScriptibleObjects;
+using ScriptableObjects;
 using WC;
 using Random = UnityEngine.Random;
 
@@ -62,9 +63,18 @@ namespace NPC
         // CUBICLE VARIABLES
         public Cubicle Cubicle;
         
-        
+        public List<NPCTrait> activeTraits = new();
+
         void Start()
         {
+            //Install
+            agent = GetComponent<NavMeshAgent>();
+            npcAnimatonController = GetComponent<NPCAnimatonController>();
+            player = GameObject.FindGameObjectWithTag("Player");
+            queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
+            toiletManager = ToiletManager.Instance;
+            table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
+            
             if (npcType != null)
             {
                 npcName = npcType.npcName;
@@ -81,12 +91,7 @@ namespace NPC
                 Debug.LogError("NPCTypeScriptableObject is NULL!");
             }
             
-            agent = GetComponent<NavMeshAgent>();
-            npcAnimatonController = GetComponent<NPCAnimatonController>();
-            player = GameObject.FindGameObjectWithTag("Player");
-            queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
-            toiletManager = ToiletManager.Instance;
-            table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
+            
             
             // Eğer NPC kuyruğa eklenme durumundaysa
             if (queueManager != null && currentState == NPCState.Queuing)
@@ -132,6 +137,8 @@ namespace NPC
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
                     gameObject.layer = 6;
                     break;
+                
+                
 
                 case NPCState.MovingToAction:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
@@ -143,6 +150,8 @@ namespace NPC
                         
                     break;
                 
+                
+                
                 case NPCState.InFrontOfDoor:
 
                     if (Cubicle.cubicleDoor.isNPCLookingAndClose && !Cubicle.isCubicleBusy)
@@ -150,11 +159,9 @@ namespace NPC
                         npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLE);
                         StartCoroutine(NPCWaitsTheOpenCubicle());
                     }
-                    
-                    
-
-                    
                     break;
+                
+                
                 
                 case NPCState.EnteringTheCubicle:
 
@@ -166,6 +173,8 @@ namespace NPC
                     }
                     
                     break;
+                
+                
 
                 case NPCState.PerformingAction:
                     transform.position = ToiletAssigned.transform.position;
@@ -187,6 +196,8 @@ namespace NPC
                             StartCoroutine(DoStandartShit());
                     }
                     break;
+                
+                
 
                 case NPCState.PerformDone:
                     Cubicle.isCubicleBusy = false;
@@ -194,6 +205,8 @@ namespace NPC
                     isShitting = false;
                     currentState = NPCState.KeyGiver;
                     break;
+                
+                
 
                 case NPCState.KeyGiver:
                     gameObject.layer = 6;
@@ -214,10 +227,14 @@ namespace NPC
                     }
                     
                     break;
+                
+                
 
                 case NPCState.KeyThief:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.RUNNING);
                     break;
+                
+                
 
                 case NPCState.AllDone:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.WALKING);
@@ -370,6 +387,18 @@ namespace NPC
             if (queueManager != null)
                 queueManager.UnregisterNPC(this);
         }
+        
+        public string GetLocalizedTraitDialog()
+        {
+            if (npcType.traits == null || npcType.traits.Count == 0) return "...";
+
+            var randomTrait = npcType.traits[Random.Range(0, npcType.traits.Count)];
+            if (randomTrait.dialogKeys == null || randomTrait.dialogKeys.Length == 0) return "...";
+
+            string key = randomTrait.dialogKeys[Random.Range(0, randomTrait.dialogKeys.Length)];
+            return LocalizationManager.Instance.GetText(key);
+        }
+
 
         public string GetInteractionText()
         {

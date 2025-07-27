@@ -1,0 +1,4 @@
+TRAIT_FASTPOOPER_LINE1=Hemen al içeri!
+TRAIT_FASTPOOPER_LINE2=Daha fazla tutamam!
+TRAIT_HYGIENEFREAK_LINE1=O ne lekesi öyle?
+TRAIT_HYGIENEFREAK_LINE2=İğrenç, burayı temizleyin!

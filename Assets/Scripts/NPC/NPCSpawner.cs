@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using ScriptibleObjects;
+using ScriptableObjects;
 using UnityEngine;
 
 namespace NPC
