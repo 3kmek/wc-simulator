@@ -22,7 +22,7 @@ namespace WC
         {
             rb = GetComponent<Rigidbody>();
             _meshCollider = GetComponent<MeshCollider>();
-            holder = GameObject.FindGameObjectWithTag("Player").transform.GetChild(0).GetChild(0).GetChild(0);
+            holder = GameObject.Find("PlayerHolder").transform;
             player = GameObject.FindGameObjectWithTag("Player");
         }
 

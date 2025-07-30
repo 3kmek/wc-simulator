@@ -4,7 +4,7 @@ namespace ScriptableObjects
 {
     public enum TraitCategory
     {
-        TokenRisk,
+        Core,
         GradeImpact,
         Economy,
         Curse,
@@ -15,30 +15,31 @@ namespace ScriptableObjects
     public class NPCTrait : ScriptableObject
     {
         [Header("Temel Bilgi")]
+        public GameObject NPCPrefab; // Sadece Core trait'lerde dolu olacak
         public string traitName;
         [TextArea] public string description;
         public TraitCategory category;
 
         [Header("Olasılık")]
-        [Range(0f, 1f)] public float triggerChance = 1f; // Örn: 0.25 = %25 ihtimalle tetiklenir
+        [Range(0f, 1f)] public float spawnChance = 1f; // Core trait için spawn olasılığı
+        [Range(0f, 1f)] public float triggerChance = 1f; // Side trait için tetiklenme olasılığı
 
         [Header("Etkiler")]
-        public int tokenDelta;      // Jeton -2 gibi
-        public float gradeMultiplier = 1f; // 0.8 → Grade çarpanı
-        public int moneyDelta;      // Sahte para = -10 gibi
-        public int curseDelta;      // CurseMeter etkisi
-        public bool blocksPayment;  // Kaçan NPC gibi mi?
+        public int tokenDelta;
+        public float gradeMultiplier = 1f;
+        public int moneyDelta;
+        public int curseDelta;
+        public bool blocksPayment;
         public bool consumesExtraSupply;
 
         [Header("İpucu")]
-        public GameObject visualHintPrefab; // Örn: burnunu tutan animasyon
-        public AudioClip voiceHint;         // "Burası çok pis!" sesi
+        public GameObject visualHintPrefab;
+        public AudioClip voiceHint;
         
         [Header("Dialog Keyleri (Localization)")]
         public string[] dialogKeys;
 
-        
-        
-        
+        [Header("Uyumlu Side Trait'ler (Sadece Core için)")]
+        public NPCTrait[] compatibleSideTraits; // Bu core trait ile uyumlu yan trait'ler
     }
 }

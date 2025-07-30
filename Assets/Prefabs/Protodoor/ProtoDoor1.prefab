@@ -566,6 +566,7 @@ MonoBehaviour:
   cubicleNPCWaitingPlace: {fileID: 4283488588793278056}
   cubicleToilet: {fileID: 8205151419976211191}
   cubicleDoor: {fileID: 5833857224144433207}
+  isCubicleBusy: 0
 --- !u!1 &8218753452753355274 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8068073526183931155, guid: 94c5973c9ada5d6438413e82629a418e,
@@ -592,7 +593,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   doorCenter: {fileID: 914399636350864404}
   Animator: {fileID: 0}
-  isPlayerLookingAndClose: 0
+  isNPCLookingAndClose: 0
   isDoorOpen: 0
   OccupiedObstacle: {fileID: 0}
   toilet: {fileID: 8205151419976211191}
@@ -725,7 +726,7 @@ PrefabInstance:
     - target: {fileID: 8102155473089344357, guid: d56b87557a2d32340bf36655f72d7ef8,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8102155473089344358, guid: d56b87557a2d32340bf36655f72d7ef8,
         type: 3}

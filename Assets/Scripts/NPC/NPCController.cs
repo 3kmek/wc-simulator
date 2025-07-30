@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -26,9 +27,6 @@ namespace NPC
     
     public class NPCController : MonoBehaviour, IInteractable
     {
-        [Header("NPC Type")]
-        public NPCTypeScriptableObject npcType;
-        
         [Header("NPC Specs")]
         public string Gender, npcName;
         public int CreepinessLevel, Weight, Chance;
@@ -45,6 +43,7 @@ namespace NPC
 
         [SerializeField] public Transform actionPosition;
         [SerializeField] private GameObject player;
+        [SerializeField] private FirstPersonController firstPersonController;
 
         public string toiletType;
         private bool isShitting = false;
@@ -63,21 +62,50 @@ namespace NPC
         // CUBICLE VARIABLES
         public Cubicle Cubicle;
         
+        [Header("NPC Trait")]
         public List<NPCTrait> activeTraits = new();
+        
+        // Dialog system variables
+        private bool isDialogueActive = false;
+        
+        // Delegates
+        public event Action<NPCTrait> OnDialogueEnter;
 
+        public NPCTrait CoreTrait
+        {
+            get
+            {
+                foreach (NPCTrait coreAday in activeTraits)
+                {
+                    if (coreAday.category == TraitCategory.Core) // veya başka bir property kontrolü
+                    {
+                        return coreAday;
+                    }
+                }
+                return null;
+            }
+        }
+        
         void Start()
         {
-            //Install
+            #region Install
+            
             agent = GetComponent<NavMeshAgent>();
             npcAnimatonController = GetComponent<NPCAnimatonController>();
             player = GameObject.FindGameObjectWithTag("Player");
+            firstPersonController = player.GetComponent<FirstPersonController>();
             queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
             toiletManager = ToiletManager.Instance;
             table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
             
-            if (npcType != null)
+
+                #endregion
+           
+            
+            
+            if (activeTraits != null)
             {
-                npcName = npcType.npcName;
+                npcName = "Samet";
                 Gender = Random.Range(0, 2) == 0 ? "Male" : "Female";
                 Weight = Random.Range(40, 151);
                 CreepinessLevel = Random.Range(0, 101);
@@ -88,7 +116,7 @@ namespace NPC
             }
             else
             {
-                Debug.LogError("NPCTypeScriptableObject is NULL!");
+                Debug.LogError("NPCTrait is NULL!");
             }
             
             
@@ -106,6 +134,8 @@ namespace NPC
 
         void Update()
         {
+            // Input kontrollerini kaldırdık, sadece Interact() içinde olacak
+            
             switch (currentState)
             {
                 case NPCState.Neutral:
@@ -137,7 +167,6 @@ namespace NPC
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.IDLERUSH);
                     gameObject.layer = 6;
                     break;
-                
                 
 
                 case NPCState.MovingToAction:
@@ -174,7 +203,6 @@ namespace NPC
                     
                     break;
                 
-                
 
                 case NPCState.PerformingAction:
                     transform.position = ToiletAssigned.transform.position;
@@ -197,7 +225,6 @@ namespace NPC
                     }
                     break;
                 
-                
 
                 case NPCState.PerformDone:
                     Cubicle.isCubicleBusy = false;
@@ -205,7 +232,6 @@ namespace NPC
                     isShitting = false;
                     currentState = NPCState.KeyGiver;
                     break;
-                
                 
 
                 case NPCState.KeyGiver:
@@ -228,12 +254,10 @@ namespace NPC
                     
                     break;
                 
-                
 
                 case NPCState.KeyThief:
                     npcAnimatonController.ChangeAnimationState(NPCAnimationState.RUNNING);
                     break;
-                
                 
 
                 case NPCState.AllDone:
@@ -244,7 +268,46 @@ namespace NPC
             }
         }
         
+        // Input kontrollerini ayrı bir metoda taşıdık
+        private void HandleInputs()
+        {
+            // WaitingForApproval state'inde ve player oturuyorsa inputları kontrol et
+            if (currentState == NPCState.WaitingForApproval && 
+                firstPersonController.IsPlayerSitting && 
+                !firstPersonController.isZoomed)
+            {
+                // E tuşu - Dialog başlat
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    Interact();
+                }
+                
+                // X tuşu - NPC'yi reddet (AllDone yap)
+                if (Input.GetKeyDown(KeyCode.X))
+                {
+                    RejectNPC();
+                }
+                
+                // F tuşu - Zoom
+                if (Input.GetKeyDown(KeyCode.F))
+                {
+                    InspectNPC();
+                }
+            }
+        }
         
+        // Ayrı metodlar oluşturduk
+        public void RejectNPC()
+        {
+            currentState = NPCState.AllDone;
+            Debug.Log("X pressed - NPC Rejected - State changed to AllDone");
+        }
+        
+        public void InspectNPC()
+        {
+            firstPersonController.isZoomed = true;
+            Debug.Log("F pressed - Inspecting NPC");
+        }
 
         /// <summary>
         /// Rastgele belirlenen olasılığa göre NPC WC kuyruğuna giriyor.
@@ -390,27 +453,65 @@ namespace NPC
         
         public string GetLocalizedTraitDialog()
         {
-            if (npcType.traits == null || npcType.traits.Count == 0) return "...";
+            if (activeTraits == null || activeTraits.Count == 0) return "...";
 
-            var randomTrait = npcType.traits[Random.Range(0, npcType.traits.Count)];
+            var randomTrait = activeTraits[Random.Range(0, activeTraits.Count)];
             if (randomTrait.dialogKeys == null || randomTrait.dialogKeys.Length == 0) return "...";
 
             string key = randomTrait.dialogKeys[Random.Range(0, randomTrait.dialogKeys.Length)];
             return LocalizationManager.Instance.GetText(key);
         }
 
-
+        // IInteractable interface implementasyonu
         public string GetInteractionText()
         {
             if (currentState == NPCState.KeyGiver)
                 return "Receive the key\nPress [E]";
+            
+            // WaitingForApproval durumunda etkileşim metinleri
+            if (currentState == NPCState.WaitingForApproval && 
+                firstPersonController.IsPlayerSitting && 
+                !firstPersonController.isZoomed && 
+                !isDialogueActive)
+            {
+                return "";
+            }
+            
             return null;
         }
 
         public void Interact()
         {
+            // KeyGiver durumunda anahtarı ver
             if (currentState == NPCState.KeyGiver)
+            {
                 GiveTheKeyToThePlayer();
+                return;
+            }
+            
+            // WaitingForApproval durumunda dialog başlat (sadece E tuşu için)
+            if (currentState == NPCState.WaitingForApproval && 
+                firstPersonController.IsPlayerSitting && 
+                !firstPersonController.isZoomed && 
+                !isDialogueActive)
+            {
+                if (activeTraits != null && activeTraits.Count > 0)
+                {
+                    OnDialogueEnter?.Invoke(activeTraits[0]);
+                    Debug.Log("E pressed - Starting dialogue");
+                }
+            }
+        }
+        
+        // Dialog sistemi için yardımcı metodlar
+        public void SetDialogueActive(bool active)
+        {
+            isDialogueActive = active;
+        }
+        
+        public bool IsDialogueActive()
+        {
+            return isDialogueActive;
         }
     }
 }

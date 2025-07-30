@@ -49,7 +49,7 @@ public class FirstPersonController : MonoBehaviour
     public float zoomStepTime = 5f;
 
     // Internal Variables
-    private bool isZoomed = false;
+    public bool isZoomed = false;
 
     #endregion
     #endregion
@@ -237,7 +237,7 @@ public class FirstPersonController : MonoBehaviour
                 playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
             }
 
-            if (IsPlayerSitting)
+            else if (IsPlayerSitting)
             {
                 yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
                 if (yaw > 180f) yaw -= 360f;
@@ -265,43 +265,47 @@ public class FirstPersonController : MonoBehaviour
         #region Camera Zoom
 
         if (enableZoom)
-        {
-            // Changes isZoomed when key is pressed
-            // Behavior for toogle zoom
-            if(Input.GetKeyDown(zoomKey) && !holdToZoom && !isSprinting)
+        {   
+            if(IsPlayerSitting)
             {
-                if (!isZoomed)
+                // Changes isZoomed when key is pressed
+                // Behavior for toogle zoom
+                if (Input.GetKeyDown(zoomKey) && !holdToZoom && !isSprinting)
                 {
-                    isZoomed = true;
+                    if (!isZoomed)
+                    {
+                        isZoomed = true;
+                    }
+                    else
+                    {
+                        isZoomed = false;
+                    }
                 }
-                else
-                {
-                    isZoomed = false;
-                }
-            }
 
-            // Changes isZoomed when key is pressed
-            // Behavior for hold to zoom
-            if(holdToZoom && !isSprinting)
-            {
-                if(Input.GetKeyDown(zoomKey))
+                // Changes isZoomed when key is pressed
+                // Behavior for hold to zoom
+                if (holdToZoom && !isSprinting)
                 {
-                    isZoomed = true;
+                    if (Input.GetKeyDown(zoomKey))
+                    {
+                        isZoomed = true;
+                    }
+                    else if (Input.GetKeyUp(zoomKey))
+                    {
+                        isZoomed = false;
+                    }
                 }
-                else if(Input.GetKeyUp(zoomKey))
-                {
-                    isZoomed = false;
-                }
-            }
 
-            // Lerps camera.fieldOfView to allow for a smooth transistion
-            if(isZoomed)
-            {
-                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, zoomFOV, zoomStepTime * Time.deltaTime);
-            }
-            else if(!isZoomed && !isSprinting)
-            {
-                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, zoomStepTime * Time.deltaTime);
+                // Lerps camera.fieldOfView to allow for a smooth transistion
+                if (isZoomed)
+                {
+                    playerCamera.fieldOfView =
+                        Mathf.Lerp(playerCamera.fieldOfView, zoomFOV, zoomStepTime * Time.deltaTime);
+                }
+                else if (!isZoomed && !isSprinting)
+                {
+                    playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, zoomStepTime * Time.deltaTime);
+                }
             }
         }
 
@@ -406,7 +410,9 @@ public class FirstPersonController : MonoBehaviour
 
     public void EnterVoyeurMode(Transform camHolder)
     {
+        
         previousRotation = playerCamera.transform.rotation;
+        
         
         playerCanMove = false;
         cameraCanMove = false;
@@ -417,23 +423,25 @@ public class FirstPersonController : MonoBehaviour
         
         
         
-        playerCamera.transform.DOLocalRotate(new Vector3(0,0,-30f), 0.3f);
+        playerCamera.transform.DOLocalRotate(new Vector3(0,0,-30f), 0.1f);
 
-        playerCamera.transform.DOMove(camHolder.position + new Vector3(0,0,1f), .2f).SetEase(Ease.InOutSine).OnComplete(() =>
+        playerCamera.transform.DOMove(camHolder.position + new Vector3(0,0,1f), .1f).SetEase(Ease.InOutSine).OnComplete(() =>
         {
-            playerCamera.transform.DOMove(camHolder.position, 1f).SetEase(Ease.InOutSine).OnComplete(() =>
+            playerCamera.transform.DOMove(camHolder.position, 0.6f).SetEase(Ease.InOutSine).OnComplete(() =>
             {
-                playerCamera.transform.DORotate(camHolder.localEulerAngles, .5f).SetEase(Ease.InOutSine).OnComplete(() =>
+                playerCamera.transform.DORotate(camHolder.localEulerAngles, .4f).SetEase(Ease.InOutSine).OnComplete(() =>
                     {
                         cameraCanMove = true;
                         
-                        VoyeurMode = true;
+                        
                         enableHeadBob = false;
                         
                         yaw = 0;
                         pitchX = 0;
                         
                         allowLookUpdate = true;
+                        
+                        VoyeurMode = true;
                     }
                 );
                 
@@ -547,6 +555,7 @@ public class FirstPersonController : MonoBehaviour
     public void ExitSittingMode()
     {
         IsPlayerSitting = false;
+        isZoomed = false;
         playerCamera.transform.SetParent(null);
         playerCamera.transform.SetParent(joint);
                 
@@ -576,6 +585,8 @@ public class FirstPersonController : MonoBehaviour
         //});
         
     }
+
+    
 
     void FixedUpdate()
     {
@@ -939,6 +950,9 @@ public class FirstPersonController : MonoBehaviour
         fpc.bobAmount = EditorGUILayout.Vector3Field(new GUIContent("Bob Amount", "Determines the amount the joint moves in both directions on every axes."), fpc.bobAmount);
         GUI.enabled = true;
 
+        fpc.VoyeurMode = EditorGUILayout.ToggleLeft(new GUIContent("Voyeur Mode", "SAPIK."), fpc.VoyeurMode);
+        fpc.IsPlayerSitting = EditorGUILayout.ToggleLeft(new GUIContent("IsPlayerSitting", "OTURMAK."), fpc.IsPlayerSitting);
+        fpc.isZoomed = EditorGUILayout.ToggleLeft(new GUIContent("isZoomed", "ZOOM."), fpc.isZoomed);
         #endregion
 
         //Sets any changes from the prefab

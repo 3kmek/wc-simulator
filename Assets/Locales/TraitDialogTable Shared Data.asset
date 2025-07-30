@@ -19,6 +19,14 @@ MonoBehaviour:
     m_Key: TRAIT_FASTPOOPER_FAST1
     m_Metadata:
       m_Items: []
+  - m_Id: 712290211512320
+    m_Key: deneme1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 712313296961536
+    m_Key: ui_talk
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

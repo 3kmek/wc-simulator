@@ -22,6 +22,14 @@ MonoBehaviour:
     m_Localized: Al iceri artik beni!
     m_Metadata:
       m_Items: []
+  - m_Id: 712290211512320
+    m_Localized: deneme1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 712313296961536
+    m_Localized: Konus [E]
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

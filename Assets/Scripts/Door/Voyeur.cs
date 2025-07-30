@@ -25,7 +25,7 @@ public class Voyeur : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
-        return "Spy the customer [E]";
+        return "Spy the customer [R]";
     }
 
     public void Interact()

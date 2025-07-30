@@ -24,11 +24,16 @@ public class PlayerInteraction : MonoBehaviour
     [Header("Texts")]
     [SerializeField] public TextMeshProUGUI noToiletAvaibleText;
     
+    private FirstPersonController firstPersonController;
+
+    //Delegates
+    [SerializeField] public event Action PlayerLookingAtNPCWhileSitting;
+    [SerializeField] public event Action PlayerNOTLookingAtNPCWhileSitting;
     
     private void Start()
     {
         playerCamera = Camera.main;
-        
+        firstPersonController = GetComponent<FirstPersonController>();
     }
 
     private void Update()
@@ -47,14 +52,39 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (playerCamera == null) return;
 
+        if (firstPersonController.IsPlayerSitting)
+        {
+            interactRange = 6.2f;
+        }
+
+        else
+        {
+            interactRange = 3f;
+        }
+
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         bool hitSomething = Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer);
-        
+            
         Debug.DrawRay(ray.origin, ray.direction * interactRange, Color.green, 0.1f);
+
+        if (hitSomething && hit.transform.GetComponent<NPCController>() && firstPersonController.IsPlayerSitting)
+        {
+            PlayerLookingAtNPCWhileSitting?.Invoke();
+        }
+        else if (hitSomething &&  !hit.transform.GetComponent<NPCController>() && firstPersonController.IsPlayerSitting)
+        {
+            PlayerNOTLookingAtNPCWhileSitting?.Invoke();
+        }
+        else
+        {
+            PlayerNOTLookingAtNPCWhileSitting?.Invoke();
+        }
 
         UpdateHighlight(hit, hitSomething);
         UpdateUI(hit);
         UIBuildSystem.Instance.SetShowDemolishText();
+        
+        
     }
     
     private void UpdateHighlight(RaycastHit hit, bool hitSomething)
@@ -94,9 +124,10 @@ public class PlayerInteraction : MonoBehaviour
 
         if (newObject.GetComponent<NPCController>() != null)
         {
-            lastHighlightedObject = newObject.transform.GetChild(0).gameObject;
-            originalLayer = newObject.transform.GetChild(0).gameObject.layer;
-            newObject.transform.GetChild(0).gameObject.layer = 8;
+            //return;
+            lastHighlightedObject = newObject.transform.GetChild(1).gameObject;
+            originalLayer = newObject.transform.GetChild(1).gameObject.layer;
+            newObject.transform.GetChild(1).gameObject.layer = 8;
         }
         else
         {
@@ -123,6 +154,7 @@ public class PlayerInteraction : MonoBehaviour
     
     private void HandleInteractionInput()
     {
+        // E tuşu - Normal etkileşim
         if (Input.GetKeyDown(KeyCode.E) && _currentHeldObject == null)
         {
             TryInteract();
@@ -132,9 +164,34 @@ public class PlayerInteraction : MonoBehaviour
         {
             TryInteractWhileHolding();
         }
+
+        // X ve F tuşları - NPC ile özel etkileşimler
+        if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.F))
+        {
+            TryNPCSpecialInteraction();
+        }
     }
 
-    
+    private void TryNPCSpecialInteraction()
+    {
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactableLayer))
+        {
+            NPCController npc = hit.transform.GetComponent<NPCController>();
+            if (npc != null && npc.currentState == NPCState.WaitingForApproval && 
+                firstPersonController.IsPlayerSitting && !firstPersonController.isZoomed)
+            {
+                if (Input.GetKeyDown(KeyCode.X))
+                {
+                    npc.RejectNPC();
+                }
+                else if (Input.GetKeyDown(KeyCode.F))
+                {
+                    npc.InspectNPC();
+                }
+            }
+        }
+    }
     
     private void TryInteract()
     {
@@ -198,10 +255,4 @@ public class PlayerInteraction : MonoBehaviour
         UITextManager.Instance.warningPrompt.enabled = false;
         warningCoroutine = null;
     }
-
-
-
-    
-
-    
 }

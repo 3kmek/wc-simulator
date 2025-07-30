@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdbb4a48019caf842b1e4b3edd2934c8, type: 3}
+  m_Name: TraitDialogDatabase
+  m_EditorClassIdentifier: 
+  dialogLines:
+  - traitTag: FASTPOOPER
+    localizedText:
+      m_TableReference:
+        m_TableCollectionName: GUID:22a32de668ad3bb418a8e99ba90232fe
+        m_Valid: 0
+        <ReferenceType>k__BackingField: 1
+      m_TableEntryReference:
+        m_KeyId: 15347126681600
+        m_Key: 
+        m_Valid: 0
+        <ReferenceType>k__BackingField: 2
+      m_FallbackState: 0
+      m_WaitForCompletion: 0
+      m_LocaleOverride: {fileID: 0}
+      m_CurrentTable:
+        m_TableCollectionName: GUID:22a32de668ad3bb418a8e99ba90232fe
+        m_Valid: 0
+        <ReferenceType>k__BackingField: 1
+      m_CurrentTableEntry:
+        m_KeyId: 15347126681600
+        m_Key: 
+        m_Valid: 0
+        <ReferenceType>k__BackingField: 2
+      m_LocalVariables: []
+      m_CurrentStringChangedValue: 
+      m_WaitingForVariablesEndUpdate: 0
+  references:
+    version: 2
+    RefIds: []

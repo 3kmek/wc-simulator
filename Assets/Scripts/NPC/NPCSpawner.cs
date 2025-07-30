@@ -7,45 +7,81 @@ namespace NPC
 {
     public class NPCSpawner : MonoBehaviour
     {
-        [SerializeField] List<GameObject> spawnPoints = new List<GameObject>();
-        [SerializeField] private GameObject NPC;
+        [Header("Spawn Settings")]
+        [SerializeField] private List<GameObject> spawnPoints = new List<GameObject>();
+        [SerializeField] private NPCTraitManager traitManager; // Inspector'da assign edilecek
         [SerializeField] private int waitingForDice = 10;
-        [SerializeField] [Range(1, 21)] int minChance = 13 ;
-        [SerializeField] private List<NPCTypeScriptableObject> npcTypes;
-        int chanceToSpawn;
+        [SerializeField] [Range(1, 21)] private int minChance = 13;
+        
+        private int chanceToSpawn;
 
         private void Start()
         {
-            // Coroutine'i yalnızca bir kez başlatıyoruz
+            if (traitManager == null)
+            {
+                Debug.LogError("NPCTraitManager is not assigned!");
+                return;
+            }
+
             StartCoroutine(StartSpawner());
         }
 
         private IEnumerator StartSpawner()
         {
-            while (true) // Sonsuz döngü içinde coroutine tekrar eder
+            while (true)
             {
                 chanceToSpawn = Random.Range(0, 21);
 
                 if (chanceToSpawn > minChance - 1)
                 {
-                    int selectedSpawn = Random.Range(0, spawnPoints.Count); // Dinamik olarak spawnPoints'in boyutuna göre seç
-                    GameObject selectedSpawnPoint = spawnPoints[selectedSpawn];
-                    
-                    NPCTypeScriptableObject selectedNPCType = npcTypes[Random.Range(0, npcTypes.Count)];
-                    
-                    GameObject newNPC = Instantiate(selectedNPCType.npcPrefab, selectedSpawnPoint.transform.position, Quaternion.identity);
-                    NPCController npcController = newNPC.GetComponent<NPCController>();
-                    
-                    if (npcController != null) npcController.npcType = selectedNPCType;
+                    SpawnNPC();
                 }
 
-                // 100 saniye bekle ve tekrar çalıştır
                 yield return new WaitForSeconds(waitingForDice);
             }
         }
+
+        private void SpawnNPC()
+        {
+            if (spawnPoints.Count == 0)
+            {
+                Debug.LogWarning("No spawn points available!");
+                return;
+            }
+
+            // Trait kombinasyonunu oluştur
+            NPCTraitCombination traitCombination = traitManager.CreateNPCTraitCombination();
+            
+            if (traitCombination.coreTrait == null || traitCombination.coreTrait.NPCPrefab == null)
+            {
+                Debug.LogWarning("No valid core trait or prefab found!");
+                return;
+            }
+
+            // Spawn pozisyonunu seç
+            int selectedSpawn = Random.Range(0, spawnPoints.Count);
+            GameObject selectedSpawnPoint = spawnPoints[selectedSpawn];
+
+            // NPC'yi spawn et
+            GameObject newNPC = Instantiate(
+                traitCombination.coreTrait.NPCPrefab, 
+                selectedSpawnPoint.transform.position, 
+                Quaternion.identity
+            );
+
+            // NPCController'a trait'leri ata
+            NPCController npcController = newNPC.GetComponent<NPCController>();
+            if (npcController != null)
+            {
+                npcController.activeTraits = traitCombination.GetAllTraits();
+                
+                Debug.Log($"Spawned NPC with Core: {traitCombination.coreTrait.traitName} " +
+                         $"and {traitCombination.sideTraits.Count} side traits");
+            }
+            else
+            {
+                Debug.LogWarning("NPCController component not found on spawned NPC!");
+            }
+        }
     }
-
-
-    
 }
-

@@ -23,7 +23,7 @@ public class Chair : MonoBehaviour, IInteractable
 
     public string GetInteractionText()
     {
-        return "Sit";
+        return "Sit [E]";
     }
 
     public void Interact()

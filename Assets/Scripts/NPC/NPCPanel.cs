@@ -34,7 +34,7 @@ namespace NPC
 
         private string GetNPCInfo(NPCController npc)
         {
-            return $"NPC: {npc.npcType.npcName}\nGender: {npc.Gender}\nCreepiness: {npc.CreepinessLevel}\nWeight: {npc.Weight}kg";
+            return $"NPC: {npc.npcName}\nGender: {npc.Gender}\nCreepiness: {npc.CreepinessLevel}\nWeight: {npc.Weight}kg";
         }
     }
 }
