@@ -1,0 +1,7 @@
+Key,Id,English (United States)(en-US),Turkish (Turkey)(tr-TR)
+TRAIT_FASTPOOPER_FAST1,1.53471E+13,"Let me in, now!",Al iceri artik beni!
+NORMAL_1,7.1229E+14,"I really need to use the bathroom, can you let me in?",Cok tuvaletim var beni iceri alir misin?
+ui_talk,7.12313E+14,Talk [E],Konus [E]
+NORMAL_2,1080235915788288,"""I really have to go, can you please let me in?""","Affedersin, cok acil tuvalete gitmem gerekiyor. Iceri al?r m?s?n?"
+ui_inspect,1099345156423680,Inspect [F],Incele [F]
+ui_reject,1099741304242176,Reject [X],Kov [X]

@@ -63,7 +63,7 @@ public class DayManager : MonoBehaviour
         timerText.SetText($"{Mathf.CeilToInt(dayTimer)}");
         endDayPanel.SetActive(false);
 
-        Debug.Log($"[DayManager] Gün {CurrentDay} başladı.");
+        //Debug.Log($"[DayManager] Gün {CurrentDay} başladı.");
     }
     #endregion
 

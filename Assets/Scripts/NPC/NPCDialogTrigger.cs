@@ -1,11 +1,10 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.Localization;
-using UnityEngine.Localization.Components;
 using System.Collections.Generic;
 using System.Collections;
 using NPC;
 using ScriptableObjects;
+using DialogSystem; // Yeni namespace
 
 public class NPCDialogTrigger : MonoBehaviour
 {
@@ -15,29 +14,32 @@ public class NPCDialogTrigger : MonoBehaviour
     [SerializeField] private TextMeshProUGUI kickUI;
     [SerializeField] private TextMeshProUGUI dialogTextUI;
     
-    [Header("Dialog Settings")]
-    [SerializeField] private float dialogDisplayDuration = 3f;
-    [SerializeField] private float fadeOutDuration = 1f;
+    [Header("Dialog Options UI")]
+    [SerializeField] private TextMeshProUGUI dialogOption1UI;
+    [SerializeField] private TextMeshProUGUI dialogOption2UI;
+    [SerializeField] private TextMeshProUGUI dialogOption3UI;
+    [SerializeField] private TextMeshProUGUI dialogBackUI;
     
-    [Header("Localization Settings")]
+    [Header("Dialog Settings")]
     [SerializeField] private string dialogTableReference = "TraitDialogTable";
-    [SerializeField] private string firstMeetingKey = "first_meeting";
-    [SerializeField] private string subsequentMeetingKey = "subsequent_meeting";
-    [SerializeField] private string fallbackDialogKey = "generic_hello";
+    [SerializeField] private float dialogDisplayDuration = 3f;
     
     // Private references
     private NPCController npc;
     private FirstPersonController firstPersonController;
     private PlayerInteraction playerInteraction;
+    private NPCDialogProfile dialogProfile;
     
     // Dialog state management
-    private bool isItFirstDialogue = true;
     private bool isDialogueActive = false;
     private bool lookingAtNPC = false;
+    private bool isInDialogMode = false;
     private int dialogueCount = 0;
     
-    // Coroutine reference for cleanup
-    private Coroutine currentDialogCoroutine;
+    // Dialog options
+    [SerializeField]private List<string> currentDialogOptions = new List<string>();
+    private Dictionary<string, string> localizedTexts = new Dictionary<string, string>();
+    private int selectedDialogIndex = 0;
 
     #region Unity Lifecycle
     void Start()
@@ -50,6 +52,11 @@ public class NPCDialogTrigger : MonoBehaviour
     void Update()
     {
         HandleUIVisibility();
+        
+        if (isInDialogMode && firstPersonController.IsPlayerSitting && !firstPersonController.isZoomed)
+        {
+            HandleDialogInput();
+        }
     }
 
     void OnDestroy()
@@ -62,6 +69,14 @@ public class NPCDialogTrigger : MonoBehaviour
     private void InitializeComponents()
     {
         npc = GetComponent<NPCController>();
+        dialogProfile = GetComponent<NPCDialogProfile>();
+        
+        // Eğer DialogProfile yoksa ekle
+        if (dialogProfile == null)
+        {
+            dialogProfile = gameObject.AddComponent<NPCDialogProfile>();
+        }
+        
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         
         if (player != null)
@@ -140,13 +155,20 @@ public class NPCDialogTrigger : MonoBehaviour
 
         bool playerSitting = firstPersonController.IsPlayerSitting;
 
-        if (playerSitting && isDialogueActive)
+        if (playerSitting && isInDialogMode)
+        {
+            SetUIVisibility(false, false, false, false);
+            SetDialogOptionsVisibility(true);
+        }
+        else if (playerSitting && isDialogueActive)
         {
             SetUIVisibility(false, false, false, true);
+            SetDialogOptionsVisibility(false);
         }
         else if (playerSitting && !isDialogueActive)
         {
             SetUIVisibility(true, true, true, false);
+            SetDialogOptionsVisibility(false);
         }
         else
         {
@@ -157,6 +179,7 @@ public class NPCDialogTrigger : MonoBehaviour
     private void HideAllUI()
     {
         SetUIVisibility(false, false, false, false);
+        SetDialogOptionsVisibility(false);
     }
 
     private void SetUIVisibility(bool talk, bool inspect, bool kick, bool dialog)
@@ -166,71 +189,205 @@ public class NPCDialogTrigger : MonoBehaviour
         if (kickUI != null) kickUI.enabled = kick;
         if (dialogTextUI != null) dialogTextUI.enabled = dialog;
     }
+    
+    private void SetDialogOptionsVisibility(bool visible)
+    {
+        if (dialogOption1UI != null) dialogOption1UI.enabled = visible;
+        if (dialogOption2UI != null) dialogOption2UI.enabled = visible;
+        if (dialogOption3UI != null) dialogOption3UI.enabled = visible;
+        if (dialogBackUI != null) dialogBackUI.enabled = visible;
+    }
 
     private bool ValidateUIElements()
     {
         if (talkUI == null || inspectUI == null || kickUI == null || dialogTextUI == null)
         {
-            Debug.LogError($"NPCDialogTrigger on {gameObject.name}: UI elementlerinden biri null! Inspector'dan tüm UI elementlerini atadığınızdan emin olun.");
+            Debug.LogError($"NPCDialogTrigger on {gameObject.name}: UI elementlerinden biri null!");
             return false;
         }
         return true;
     }
     #endregion
 
-    #region Dialog System - Localized
+    #region Dialog Options System
+    public void EnterDialogMode()
+    {
+        isInDialogMode = true;
+        selectedDialogIndex = 0;
+        
+        // DialogProfile'dan mevcut dialog seçeneklerini al
+        if (dialogProfile != null)
+        {
+            currentDialogOptions = dialogProfile.GetAvailableDialogOptions();
+        }
+        else
+        {
+            // Fallback - eski sistem
+            currentDialogOptions = GetDialogKeyPool();
+        }
+        
+        // Localized text'leri async olarak al
+        LoadLocalizedDialogOptions();
+        
+//        Debug.Log("Entered dialog mode");
+    }
+    
+    public void ExitDialogMode()
+    {
+        isInDialogMode = false;
+        currentDialogOptions.Clear();
+        localizedTexts.Clear();
+        Debug.Log("Exited dialog mode");
+    }
+    
+    private void LoadLocalizedDialogOptions()
+    {
+        if (LocalizationManager.Instance == null)
+        {
+            Debug.LogError("LocalizationManager instance not found!");
+            UpdateDialogOptionsUI(); // UI'yi güncelle (key'ler ile)
+            return;
+        }
+        
+        // Tüm dialog key'leri için localized text'leri al
+        string[] keys = currentDialogOptions.ToArray();
+        LocalizationManager.Instance.GetMultipleLocalizedTexts(keys, (results) =>
+        {
+            localizedTexts = results;
+            UpdateDialogOptionsUI();
+        });
+    }
+    
+    private void HandleDialogInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1) && currentDialogOptions.Count > 0)
+        {
+            SelectDialogOption(0);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2) && currentDialogOptions.Count > 1)
+        {
+            SelectDialogOption(1);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3) && currentDialogOptions.Count > 2)
+        {
+            SelectDialogOption(2);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Q))
+        {
+            ExitDialogMode();
+        }
+    }
+    
+    private void SelectDialogOption(int optionIndex)
+    {
+        if (optionIndex >= 0 && optionIndex < currentDialogOptions.Count)
+        {
+            string selectedDialogKey = currentDialogOptions[optionIndex];
+            
+            // DialogProfile'a seçimi bildir
+            if (dialogProfile != null)
+            {
+                dialogProfile.OnDialogSelected(selectedDialogKey);
+            }
+            
+            // Seçilen dialog'u göster
+            DisplayDialogFromKey(selectedDialogKey);
+            
+            // Dialog mode'dan çık ve cevabı göster
+            ExitDialogMode();
+            
+            Debug.Log($"Selected dialog option {optionIndex + 1}: {selectedDialogKey}");
+        }
+    }
+    
+    private void UpdateDialogOptionsUI()
+    {
+        // Dialog option text'lerini güncelle
+        if (dialogOption1UI != null)
+        {
+            if (currentDialogOptions.Count > 0)
+            {
+                string dialogText = GetLocalizedOrKeyText(currentDialogOptions[0]);
+                dialogOption1UI.text = $"1. {dialogText}";
+            }
+            else
+            {
+                dialogOption1UI.text = "";
+            }
+        }
+        
+        if (dialogOption2UI != null)
+        {
+            if (currentDialogOptions.Count > 1)
+            {
+                string dialogText = GetLocalizedOrKeyText(currentDialogOptions[1]);
+                dialogOption2UI.text = $"2. {dialogText}";
+            }
+            else
+            {
+                dialogOption2UI.text = "";
+            }
+        }
+        
+        if (dialogOption3UI != null)
+        {
+            if (currentDialogOptions.Count > 2)
+            {
+                string dialogText = GetLocalizedOrKeyText(currentDialogOptions[2]);
+                dialogOption3UI.text = $"3. {dialogText}";
+            }
+            else
+            {
+                dialogOption3UI.text = "";
+            }
+        }
+        
+        if (dialogBackUI != null)
+        {
+            dialogBackUI.text = "4. Go Back [Q]";
+        }
+    }
+    
+    private string GetLocalizedOrKeyText(string key)
+    {
+        // Önce cache'den localized text'i kontrol et
+        if (localizedTexts.ContainsKey(key))
+        {
+            return localizedTexts[key];
+        }
+        
+        // Cache'de yoksa LocalizationManager'dan al
+        if (LocalizationManager.Instance != null)
+        {
+            return LocalizationManager.Instance.GetLocalizedText(key);
+        }
+        
+        // Son çare olarak key'i döndür
+        return key;
+    }
+    #endregion
+
+    #region Dialog System
     public void StartDialogue(NPCTrait npcTrait)
     {
-        if (isDialogueActive) return;
-
-        dialogueCount++;
-        isDialogueActive = true;
-
-        // Localized dialog key'ini belirle
-        string dialogKey = GetDialogKeyForState();
-        DisplayLocalizedDialog(dialogKey);
-
-        if (isItFirstDialogue)
-        {
-            isItFirstDialogue = false;
-        }
+        EnterDialogMode();
     }
-
-    private string GetDialogKeyForState()
+    
+    private void DisplayDialogFromKey(string dialogKey)
     {
-        // İlk karşılaşma için özel key
-        if (isItFirstDialogue)
+        if (LocalizationManager.Instance != null)
         {
-            return firstMeetingKey;
+            LocalizationManager.Instance.GetLocalizedTextAsync(dialogKey, (localizedText) =>
+            {
+                DisplayDialog(localizedText);
+            });
         }
-
-        // NPC trait'lerine göre dialog key havuzu oluştur
-        List<string> availableKeys = GetDialogKeyPool();
+        else
+        {
+            DisplayDialog(dialogKey); // Fallback
+        }
         
-        if (availableKeys.Count > 0)
-        {
-            return GetRandomDialogKey(availableKeys);
-        }
-
-        // Fallback key
-        return fallbackDialogKey;
-    }
-
-    private void DisplayLocalizedDialog(string dialogKey)
-    {
-        var localizedString = new LocalizedString(dialogTableReference, dialogKey);
-
-        // String değişikliğini dinle
-        localizedString.StringChanged += OnLocalizedStringChanged;
-
-        // String'i yenile ve göster
-        localizedString.RefreshString();
-    }
-
-    private void OnLocalizedStringChanged(string localizedText)
-    {
-        // Localized text'i display et
-        DisplayDialog(localizedText);
+        dialogueCount++;
     }
 
     private void DisplayDialog(string text)
@@ -238,46 +395,16 @@ public class NPCDialogTrigger : MonoBehaviour
         if (dialogTextUI != null)
         {
             dialogTextUI.text = text;
+            isDialogueActive = true;
         }
-
-        // Önceki coroutine'i durdur
-        if (currentDialogCoroutine != null)
-        {
-            StopCoroutine(currentDialogCoroutine);
-        }
-
-        // Yeni dialog display coroutine başlat
-        currentDialogCoroutine = StartCoroutine(DialogDisplayCoroutine());
+        
+        StartCoroutine(DialogDisplayCoroutine());
     }
 
     private IEnumerator DialogDisplayCoroutine()
     {
         yield return new WaitForSeconds(dialogDisplayDuration);
-
-        if (fadeOutDuration > 0)
-        {
-            yield return StartCoroutine(FadeOutDialog());
-        }
-
         EndDialog();
-    }
-
-    private IEnumerator FadeOutDialog()
-    {
-        if (dialogTextUI == null) yield break;
-
-        Color originalColor = dialogTextUI.color;
-        float elapsed = 0f;
-
-        while (elapsed < fadeOutDuration)
-        {
-            elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, elapsed / fadeOutDuration);
-            dialogTextUI.color = new Color(originalColor.r, originalColor.g, originalColor.b, alpha);
-            yield return null;
-        }
-
-        dialogTextUI.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f);
     }
 
     private void EndDialog()
@@ -286,59 +413,22 @@ public class NPCDialogTrigger : MonoBehaviour
         
         if (dialogTextUI != null)
         {
-            Color color = dialogTextUI.color;
-            dialogTextUI.color = new Color(color.r, color.g, color.b, 1f);
+            dialogTextUI.text = "";
         }
-
-        currentDialogCoroutine = null;
     }
 
     public void ForceEndDialog()
     {
-        if (currentDialogCoroutine != null)
-        {
-            StopCoroutine(currentDialogCoroutine);
-            currentDialogCoroutine = null;
-        }
         EndDialog();
+        ExitDialogMode();
     }
     #endregion
 
-    #region Interaction System
-    // public string GetInteractionText()
-    // {
-    //     if (npc.currentState == NPCState.WaitingForApproval && firstPersonController.IsPlayerSitting)
-    //     {
-    //         if (isDialogueActive)
-    //             return null;
-    //         else
-    //             return "Talk\n[E]";
-    //     }
-    //     return null;
-    // }
-    //
-    // public void Interact()
-    // {
-    //     if (npc.currentState != NPCState.WaitingForApproval || isDialogueActive) 
-    //         return;
-    //
-    //     // E tuşuna basıldığında da localized dialog göster
-    //     List<string> keyPool = GetDialogKeyPool();
-    //     string selectedKey = GetRandomDialogKey(keyPool);
-    //     
-    //     if (string.IsNullOrEmpty(selectedKey))
-    //     {
-    //         selectedKey = fallbackDialogKey;
-    //     }
-    //     
-    //     DisplayLocalizedDialog(selectedKey);
-    // }
-
+    #region Legacy Support - Eski sistem için
     private List<string> GetDialogKeyPool()
     {
         List<string> keyPool = new List<string>();
 
-        // NPC'nin aktif trait'lerinden dialog key'lerini topla
         if (npc != null && npc.activeTraits != null)
         {
             foreach (var trait in npc.activeTraits)
@@ -350,46 +440,34 @@ public class NPCDialogTrigger : MonoBehaviour
             }
         }
 
-        return keyPool;
-    }
-
-    private string GetRandomDialogKey(List<string> keyPool)
-    {
-        if (keyPool == null || keyPool.Count == 0)
+        // Eğer hiç key yoksa default'ları ekle
+        if (keyPool.Count == 0)
         {
-            return fallbackDialogKey;
+            keyPool.Add("NORMAL_1");
+            keyPool.Add("NORMAL_2");
         }
-        
-        return keyPool[Random.Range(0, keyPool.Count)];
+
+        return keyPool;
     }
     #endregion
 
     #region Debug and Utility
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    private void LogDebugInfo(string message)
+    [ContextMenu("Test Enter Dialog Mode")]
+    private void TestEnterDialogMode()
     {
-        Debug.Log($"[NPCDialogTrigger - {gameObject.name}] {message}");
+        EnterDialogMode();
     }
 
-    [ContextMenu("Test Start Dialog")]
-    private void TestStartDialog()
+    [ContextMenu("Test Exit Dialog Mode")]
+    private void TestExitDialogMode()
     {
-        if (npc != null && npc.activeTraits != null && npc.activeTraits.Count > 0)
-        {
-            StartDialogue(npc.activeTraits[0]);
-        }
+        ExitDialogMode();
     }
 
     [ContextMenu("Force End Dialog")]
     private void TestEndDialog()
     {
         ForceEndDialog();
-    }
-
-    [ContextMenu("Test Localization")]
-    private void TestLocalization()
-    {
-        DisplayLocalizedDialog(fallbackDialogKey);
     }
     #endregion
 }

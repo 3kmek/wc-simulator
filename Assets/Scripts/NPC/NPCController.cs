@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using DG.Tweening;
 using ScriptableObjects;
+using UnityEngine.Serialization;
 using WC;
 using Random = UnityEngine.Random;
 
@@ -27,7 +28,8 @@ namespace NPC
     
     public class NPCController : MonoBehaviour, IInteractable
     {
-        [Header("NPC Specs")]
+        [Header("NPC Specs")] 
+        public GameObject hair;
         public string Gender, npcName;
         public int CreepinessLevel, Weight, Chance;
         public int moneyToGive = 10;
@@ -44,6 +46,7 @@ namespace NPC
         [SerializeField] public Transform actionPosition;
         [SerializeField] private GameObject player;
         [SerializeField] private FirstPersonController firstPersonController;
+        [SerializeField] public PlayerInteraction playerInteraction;
 
         public string toiletType;
         private bool isShitting = false;
@@ -67,6 +70,7 @@ namespace NPC
         
         // Dialog system variables
         private bool isDialogueActive = false;
+        
         
         // Delegates
         public event Action<NPCTrait> OnDialogueEnter;
@@ -97,7 +101,7 @@ namespace NPC
             queueManager = GameObject.FindGameObjectWithTag("Queue Manager").GetComponent<QueueManager>();
             toiletManager = ToiletManager.Instance;
             table = GameObject.FindGameObjectWithTag("Table").GetComponent<Table>();
-            
+            playerInteraction = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInteraction>();
 
                 #endregion
            
@@ -300,13 +304,26 @@ namespace NPC
         public void RejectNPC()
         {
             currentState = NPCState.AllDone;
+            QueueManager.Instance.DequeueFront();
             Debug.Log("X pressed - NPC Rejected - State changed to AllDone");
         }
         
         public void InspectNPC()
         {
-            firstPersonController.isZoomed = true;
-            Debug.Log("F pressed - Inspecting NPC");
+            
+            if (!firstPersonController.isZoomed && !playerInteraction.InspectingMode)
+            {
+                firstPersonController.isZoomed = true;
+                playerInteraction.InspectingMode = true;
+            }
+            else if (firstPersonController.isZoomed && playerInteraction.InspectingMode)
+            {
+                firstPersonController.isZoomed = false;
+                playerInteraction.InspectingMode = false;
+            }
+            
+            
+            
         }
 
         /// <summary>
@@ -451,16 +468,6 @@ namespace NPC
                 queueManager.UnregisterNPC(this);
         }
         
-        public string GetLocalizedTraitDialog()
-        {
-            if (activeTraits == null || activeTraits.Count == 0) return "...";
-
-            var randomTrait = activeTraits[Random.Range(0, activeTraits.Count)];
-            if (randomTrait.dialogKeys == null || randomTrait.dialogKeys.Length == 0) return "...";
-
-            string key = randomTrait.dialogKeys[Random.Range(0, randomTrait.dialogKeys.Length)];
-            return LocalizationManager.Instance.GetText(key);
-        }
 
         // IInteractable interface implementasyonu
         public string GetInteractionText()
@@ -489,16 +496,27 @@ namespace NPC
                 return;
             }
             
-            // WaitingForApproval durumunda dialog başlat (sadece E tuşu için)
+            // WaitingForApproval durumunda dialog mode'a gir (sadece E tuşu için)
             if (currentState == NPCState.WaitingForApproval && 
                 firstPersonController.IsPlayerSitting && 
                 !firstPersonController.isZoomed && 
                 !isDialogueActive)
             {
-                if (activeTraits != null && activeTraits.Count > 0)
+                // Dialog trigger'a dialog mode'a gir komutu gönder
+                NPCDialogTrigger dialogTrigger = GetComponent<NPCDialogTrigger>();
+                if (dialogTrigger != null)
                 {
-                    OnDialogueEnter?.Invoke(activeTraits[0]);
-                    Debug.Log("E pressed - Starting dialogue");
+                    dialogTrigger.EnterDialogMode();
+                    Debug.Log("E pressed - Entering dialog mode");
+                }
+                else
+                {
+                    // Fallback - eski sistem
+                    if (activeTraits != null && activeTraits.Count > 0)
+                    {
+                        OnDialogueEnter?.Invoke(activeTraits[0]);
+                        Debug.Log("E pressed - Starting dialogue (fallback)");
+                    }
                 }
             }
         }

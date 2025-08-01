@@ -22,12 +22,36 @@ MonoBehaviour:
     m_Localized: Al iceri artik beni!
     m_Metadata:
       m_Items: []
-  - m_Id: 712290211512320
-    m_Localized: deneme1
-    m_Metadata:
-      m_Items: []
   - m_Id: 712313296961536
     m_Localized: Konus [E]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1080235915788288
+    m_Localized: Affedersin, cok acil tuvalete gitmem gerekiyor. Iceri al?r m?s?n?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099345156423680
+    m_Localized: Incele [F]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099741304242176
+    m_Localized: Kov [X]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1104172158599168
+    m_Localized: Cok tuvaletim var beni iceri alir misin?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1137404304474112
+    m_Localized: Kalk [Q]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139739688747008
+    m_Localized: Otur [E]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1209766492291072
+    m_Localized: Geri [F]
     m_Metadata:
       m_Items: []
   references:

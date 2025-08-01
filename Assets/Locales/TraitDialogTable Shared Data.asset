@@ -19,12 +19,36 @@ MonoBehaviour:
     m_Key: TRAIT_FASTPOOPER_FAST1
     m_Metadata:
       m_Items: []
-  - m_Id: 712290211512320
-    m_Key: deneme1
+  - m_Id: 1104172158599168
+    m_Key: NORMAL_1
     m_Metadata:
       m_Items: []
   - m_Id: 712313296961536
     m_Key: ui_talk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1080235915788288
+    m_Key: NORMAL_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099345156423680
+    m_Key: ui_inspect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099741304242176
+    m_Key: ui_reject
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1137404304474112
+    m_Key: ui_standup
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139739688747008
+    m_Key: ui_sit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1209766492291072
+    m_Key: ui_zoomOut
     m_Metadata:
       m_Items: []
   m_Metadata:

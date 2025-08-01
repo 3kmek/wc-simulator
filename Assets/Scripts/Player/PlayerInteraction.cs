@@ -14,8 +14,10 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] private LayerMask interactableLayer; // Layer 6 ve 8'i içerdiğinden emin olun
     [SerializeField] private Camera playerCamera;
     [SerializeField] public Transform _holdPosition;
-    private GameObject lastHighlightedObject;
-    [SerializeField]private int originalLayer = -1; // Orijinal katmanı kalıcı olarak sakla
+    private GameObject lastHighlightedObject, lastHighlightedObject2;
+    [SerializeField]private int originalLayer = -1, originalLayer2 = -1; // Orijinal katmanı kalıcı olarak sakla
+
+    public bool InspectingMode;
 
     public bool isHoldingSomething = false;
     public GameObject _currentHeldObject;
@@ -25,6 +27,7 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] public TextMeshProUGUI noToiletAvaibleText;
     
     private FirstPersonController firstPersonController;
+    [SerializeField] private TextMeshProUGUI zoomOutText;
 
     //Delegates
     [SerializeField] public event Action PlayerLookingAtNPCWhileSitting;
@@ -42,10 +45,23 @@ public class PlayerInteraction : MonoBehaviour
         //new
         HandleRaycast();
         HandleInteractionInput();
-        
+        HandleZoomOutUI();
+
         ///
 
-        
+
+    }
+
+    void HandleZoomOutUI()
+    {
+        if (InspectingMode)
+        {
+            zoomOutText.enabled = true;
+        }
+        else
+        {
+            zoomOutText.enabled = false;
+        }
     }
     
     private void HandleRaycast()
@@ -54,7 +70,7 @@ public class PlayerInteraction : MonoBehaviour
 
         if (firstPersonController.IsPlayerSitting)
         {
-            interactRange = 6.2f;
+            interactRange = 6f;
         }
 
         else
@@ -112,9 +128,23 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (lastHighlightedObject != null)
         {
-            lastHighlightedObject.layer = originalLayer;
+            // Ana objeyi resetle
+            if (originalLayer != -1)
+            {
+                lastHighlightedObject.layer = originalLayer;
+            }
+            
+            // Hair objesini resetle (eğer varsa)
+            if (lastHighlightedObject2 != null && originalLayer2 != -1)
+            {
+                lastHighlightedObject2.layer = originalLayer2;
+            }
+            
+            // Değişkenleri temizle
             lastHighlightedObject = null;
+            lastHighlightedObject2 = null;
             originalLayer = -1;
+            originalLayer2 = -1;
         }
     }
     
@@ -122,21 +152,38 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (newObject.layer == 8) return;
 
-        if (newObject.GetComponent<NPCController>() != null)
+        NPCController npcController = newObject.GetComponent<NPCController>();
+
+        if (npcController != null)
         {
-            //return;
-            lastHighlightedObject = newObject.transform.GetChild(1).gameObject;
-            originalLayer = newObject.transform.GetChild(1).gameObject.layer;
-            newObject.transform.GetChild(1).gameObject.layer = 8;
+            // NPC highlight işlemi
+            GameObject npcBody = newObject.transform.GetChild(1).gameObject;
+            GameObject npcHair = npcController.hair;
+            
+            // Zaten highlight edilmiş mi kontrol et
+            if (npcBody.layer == 8) return;
+            
+            lastHighlightedObject = npcBody;
+            originalLayer = npcBody.layer;
+            npcBody.layer = 8;
+            
+            // Hair objesi varsa ve layer 8 değilse highlight et
+            if (npcHair != null && npcHair.layer != 8)
+            {
+                lastHighlightedObject2 = npcHair;
+                originalLayer2 = npcHair.layer;
+                npcHair.layer = 8;
+            }
         }
         else
         {
-            // Yeni objeyi işaretle
+            // Normal obje highlight işlemi
             lastHighlightedObject = newObject;
+            lastHighlightedObject2 = null; // Normal objeler için hair yok
             originalLayer = newObject.layer;
+            originalLayer2 = -1; // Hair olmadığı için -1
             newObject.layer = 8;
         }
-        
     }
     
     private void UpdateUI(RaycastHit hit)
@@ -170,6 +217,9 @@ public class PlayerInteraction : MonoBehaviour
         {
             TryNPCSpecialInteraction();
         }
+
+        
+        
     }
 
     private void TryNPCSpecialInteraction()
@@ -179,17 +229,30 @@ public class PlayerInteraction : MonoBehaviour
         {
             NPCController npc = hit.transform.GetComponent<NPCController>();
             if (npc != null && npc.currentState == NPCState.WaitingForApproval && 
-                firstPersonController.IsPlayerSitting && !firstPersonController.isZoomed)
+                firstPersonController.IsPlayerSitting)
             {
-                if (Input.GetKeyDown(KeyCode.X))
+                
+                if (Input.GetKeyDown(KeyCode.X) && !firstPersonController.isZoomed)
                 {
-                    npc.RejectNPC();
+                    {
+                        npc.RejectNPC();
+                    }
                 }
                 else if (Input.GetKeyDown(KeyCode.F))
                 {
                     npc.InspectNPC();
                 }
             }
+            
+            
+
+            
+        }
+        else if (InspectingMode)
+        {
+            firstPersonController.isZoomed = false;
+            InspectingMode = false;
+            Debug.Log("DAMN");
         }
     }
     

@@ -10,6 +10,9 @@ namespace NPC
     public class QueueManager : MonoBehaviour
     {
         
+        public static QueueManager Instance { get; private set; }
+        
+        
         public List<NPCController> npcsInQueue = new List<NPCController>();
         [Tooltip("Queue’de kullanılacak tüm pozisyonlar. Index sırasına göre NPC'ler dizeceğiz.")]
         public List<Transform> queuePositions = new List<Transform>();
@@ -17,6 +20,10 @@ namespace NPC
         private int _priority;
         private void Start()
         {
+            if (Instance != null) { Destroy(gameObject); return; }
+            Instance = this;
+            DontDestroyOnLoad(this);
+            
             for (int i = 0; i < transform.childCount; i++)
             {
                 queuePositions.Add(transform.GetChild(i));

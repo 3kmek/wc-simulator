@@ -22,12 +22,36 @@ MonoBehaviour:
     m_Localized: Let me in, now!
     m_Metadata:
       m_Items: []
-  - m_Id: 712290211512320
-    m_Localized: deneme1
-    m_Metadata:
-      m_Items: []
   - m_Id: 712313296961536
     m_Localized: Talk [E]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1080235915788288
+    m_Localized: '"I really have to go, can you please let me in?"'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099345156423680
+    m_Localized: Inspect [F]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1099741304242176
+    m_Localized: Reject [X]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1104172158599168
+    m_Localized: I really need to use the bathroom, can you let me in?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1137404304474112
+    m_Localized: Stand Up [Q]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1139739688747008
+    m_Localized: Sit [E]
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1209766492291072
+    m_Localized: Zoom Out [F]
     m_Metadata:
       m_Items: []
   references:

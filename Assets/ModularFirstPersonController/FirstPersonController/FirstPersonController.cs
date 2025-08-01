@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 #if UNITY_EDITOR
     using UnityEditor;
@@ -144,13 +145,18 @@ public class FirstPersonController : MonoBehaviour
     // Sitting Mode Variables
     
     public bool IsPlayerSitting;
-    
+    private PlayerInteraction playerInteraction;
+    [SerializeField] public float inspectBakisMax, inspectBakisMin;
     #endregion
-    
 
+    [SerializeField] public TextMeshProUGUI rightDownText;
+    
+    
+    
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        playerInteraction = GetComponent<PlayerInteraction>();
 
         crosshairObject = GetComponentInChildren<Image>();
 
@@ -237,7 +243,7 @@ public class FirstPersonController : MonoBehaviour
                 playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
             }
 
-            else if (IsPlayerSitting)
+            else if (IsPlayerSitting && !playerInteraction.InspectingMode)
             {
                 yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
                 if (yaw > 180f) yaw -= 360f;
@@ -247,6 +253,18 @@ public class FirstPersonController : MonoBehaviour
                 pitchX = Mathf.Clamp(pitchX, -(maxLookAngle- 10f), maxLookAngle -30f );
                 yaw = Mathf.Clamp(yaw, -70, 70);
 
+                playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
+            }
+            else if (IsPlayerSitting && playerInteraction.InspectingMode)
+            {
+                yaw += Input.GetAxis("Mouse X") * mouseSensitivity;
+                if (yaw > 180f) yaw -= 360f;
+
+                pitchX += (invertCamera ? 1 : -1) * mouseSensitivity * Input.GetAxis("Mouse Y");
+
+                pitchX = Mathf.Clamp(pitchX, -(inspectBakisMin), inspectBakisMin );
+                yaw = Mathf.Clamp(yaw, -30, 30);
+                
                 playerCamera.transform.localEulerAngles = new Vector3(pitchX, yaw, 0);
             }
             else
@@ -306,6 +324,11 @@ public class FirstPersonController : MonoBehaviour
                 {
                     playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, zoomStepTime * Time.deltaTime);
                 }
+            }
+            else
+            {
+                isZoomed = false;
+                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, fov, zoomStepTime * Time.deltaTime);
             }
         }
 
@@ -400,11 +423,25 @@ public class FirstPersonController : MonoBehaviour
         
         HandleSittingMode();
 
+        HandleRightDownText();
+
         CheckGround();
 
         if(enableHeadBob)
         {
             HeadBob();
+        }
+    }
+
+    void HandleRightDownText()
+    {
+        if (IsPlayerSitting)
+        {
+            rightDownText.enabled = true;
+        }
+        else
+        {
+            rightDownText.enabled = false;
         }
     }
 
@@ -554,8 +591,10 @@ public class FirstPersonController : MonoBehaviour
 
     public void ExitSittingMode()
     {
-        IsPlayerSitting = false;
         isZoomed = false;
+        IsPlayerSitting = false;
+        playerInteraction.InspectingMode = false;
+        
         playerCamera.transform.SetParent(null);
         playerCamera.transform.SetParent(joint);
                 
@@ -578,7 +617,7 @@ public class FirstPersonController : MonoBehaviour
                 Vector3 camEuler = previousRotation.eulerAngles;
                 yaw = camEuler.y;
                 pitchX = camEuler.x;
-
+                isZoomed = false;
                     
             });        
            
@@ -953,6 +992,11 @@ public class FirstPersonController : MonoBehaviour
         fpc.VoyeurMode = EditorGUILayout.ToggleLeft(new GUIContent("Voyeur Mode", "SAPIK."), fpc.VoyeurMode);
         fpc.IsPlayerSitting = EditorGUILayout.ToggleLeft(new GUIContent("IsPlayerSitting", "OTURMAK."), fpc.IsPlayerSitting);
         fpc.isZoomed = EditorGUILayout.ToggleLeft(new GUIContent("isZoomed", "ZOOM."), fpc.isZoomed);
+        fpc.rightDownText = (TextMeshProUGUI)EditorGUILayout.ObjectField(new GUIContent("rightDownText", "Joint object position is moved while head bob is active."), fpc.rightDownText, typeof(TextMeshProUGUI), true);;
+        fpc.inspectBakisMax = EditorGUILayout.FloatField(new GUIContent("inspectBakisMax", "The camera’s view angle. Changes the player camera directly."), fpc.inspectBakisMax);
+        fpc.inspectBakisMin = EditorGUILayout.FloatField(new GUIContent("inspectBakisMin", "The camera’s view angle. Changes the player camera directly."), fpc.inspectBakisMin);
+        
+        
         #endregion
 
         //Sets any changes from the prefab

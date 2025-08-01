@@ -29,5 +29,5 @@ MonoBehaviour:
   voiceHint: {fileID: 0}
   dialogKeys:
   - deneme1
-  - deneme1
+  - TRAIT_FASTPOOPER_FAST1
   compatibleSideTraits: []
