@@ -27,7 +27,18 @@ MonoBehaviour:
   consumesExtraSupply: 0
   visualHintPrefab: {fileID: 0}
   voiceHint: {fileID: 0}
-  dialogKeys:
-  - deneme1
-  - TRAIT_FASTPOOPER_FAST1
+  dialogKeys: []
+  dialogSequences:
+  - sequenceName: NORMAL
+    dialogType: 0
+    dialogKeys:
+    - NORMAL_1
+    isFirstMeeting: 0
+    requiresSpecificTrait: 0
+    requiredTraitName: 
   compatibleSideTraits: []
+  debugInfo: 'Total Dialog Keys: 1
+
+    Sequences: 1
+
+    Legacy Keys: 0'
